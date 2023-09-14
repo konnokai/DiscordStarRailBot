@@ -48,7 +48,7 @@ namespace DiscordStarRailBot
             if (!Directory.Exists(Path.GetDirectoryName(GetDataFilePath(""))))
                 Directory.CreateDirectory(Path.GetDirectoryName(GetDataFilePath(""))!);
 
-            using (var db = new DataBase.MainDbContext())
+            using (var db = new DataBase.DBContext())
             {
                 if (!File.Exists(GetDataFilePath("DataBase.db")))
                 {
