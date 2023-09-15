@@ -3,19 +3,11 @@ using DiscordStarRailBot.DataBase;
 using DiscordStarRailBot.DataBase.Table;
 using DiscordStarRailBot.Interaction.Attribute;
 using DiscordStarRailBot.Interaction.HSR.Service;
-using StackExchange.Redis;
 
 namespace DiscordStarRailBot.Interaction.HSR
 {
     public class HSR : TopLevelModule<HSRService>
     {
-        private readonly HttpClient _httpClient;
-
-        public HSR(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
-
         [SlashCommand("link-user-id", "綁定你的Discord及遊戲UID")]
         [CommandExample("800000000")]
         public async Task LinkUserId([Summary("UID", "留空則取消綁定")] string userId = "")
@@ -42,7 +34,7 @@ namespace DiscordStarRailBot.Interaction.HSR
                     return;
                 }
 
-                var (isSuccess, data) = await GetUserDataAsync(userId);
+                var (isSuccess, data) = await _service.GetUserDataAsync(userId);
                 if (!isSuccess || data == null)
                 {
                     await Context.Interaction.SendErrorAsync($"綁定UID失敗，請確認UID `{userId}` 是否正確", true);
@@ -79,7 +71,7 @@ namespace DiscordStarRailBot.Interaction.HSR
                     userId = playerIdLink.PlayerId;
             }
 
-            var (isSuccess, data) = await GetUserDataAsync(userId);
+            var (isSuccess, data) = await _service.GetUserDataAsync(userId);
             if (!isSuccess || data == null)
             {
                 await Context.Interaction.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
@@ -87,45 +79,19 @@ namespace DiscordStarRailBot.Interaction.HSR
             }
 
             await Context.Interaction.FollowupAsync(embed: new EmbedBuilder()
-                .WithOkColor()
-                .WithTitle(data.Player.Nickname)
-                .WithThumbnailUrl($"https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{data.Player.Avatar.Icon}")
-                .WithDescription($"「{data.Player.Signature}」\n\n" +
-                    $"**均衡等級**: {data.Player.WorldLevel}\n" +
-                    $"**開拓等級**: {data.Player.Level}\n" +
-                    $"**角色數量**: {data.Player.SpaceInfo.AvatarCount}\n" +
-                    $"**光錐數量**: {data.Player.SpaceInfo.LightConeCount}\n" +
-                    $"**成就數量**: {data.Player.SpaceInfo.AchievementCount}")
-                .WithFooter("玩家資料會快取半小時，可能會有資料上的落差", "https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/sign/SettingsAccount.png")
-                .Build());
-        }
-
-        private async Task<(bool isSuccess, SRInfoJson? data)> GetUserDataAsync(string userId)
-        {
-            if (string.IsNullOrEmpty(userId))
-                throw new NullReferenceException(nameof(userId));
-
-            try
-            {
-                string json = (await Program.RedisDb.StringGetAsync($"hsr:{userId}")).ToString();
-
-                if (string.IsNullOrEmpty(json))
-                {
-                    json = await _httpClient.GetStringAsync($"https://api.mihomo.me/sr_info_parsed/{userId}?lang=cht");
-                    if (json == "{\"detail\":\"Invalid uid\"}")
-                        return (false, null);
-
-                    await Program.RedisDb.StringSetAsync(new RedisKey($"hsr:{userId}"), json, TimeSpan.FromMinutes(30));
-                }
-
-                SRInfoJson? userInfo = JsonConvert.DeserializeObject<SRInfoJson>(json);
-                return (true, userInfo);
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex, "HSR-GetUserData");
-                return (false, null);
-            }
+                    .WithOkColor()
+                    .WithTitle(data.Player.Nickname)
+                    .WithThumbnailUrl($"https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{data.Player.Avatar.Icon}")
+                    .WithDescription($"「{data.Player.Signature}」\n\n" +
+                        $"**均衡等級**: {data.Player.WorldLevel}\n" +
+                        $"**開拓等級**: {data.Player.Level}\n" +
+                        $"**角色數量**: {data.Player.SpaceInfo.AvatarCount}\n" +
+                        $"**光錐數量**: {data.Player.SpaceInfo.LightConeCount}\n" +
+                        $"**成就數量**: {data.Player.SpaceInfo.AchievementCount}")
+                    .WithFooter("玩家資料會快取半小時，可能會有資料上的落差", "https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/sign/SettingsAccount.png").Build(),
+                components: new ComponentBuilder()
+                    .WithButton("玩家資料", $"player_data:{data.Player.Uid}", disabled: true)
+                    .WithButton("角色資料", $"player_char_data:{data.Player.Uid}").Build());
         }
     }
 }

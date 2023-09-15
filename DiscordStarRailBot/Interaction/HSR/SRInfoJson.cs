@@ -308,10 +308,10 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string SetName { get; set; }
 
         [JsonProperty("rarity")]
-        public int? Rarity { get; set; }
+        public int Rarity { get; set; }
 
         [JsonProperty("level")]
-        public int? Level { get; set; }
+        public int Level { get; set; }
 
         [JsonProperty("icon")]
         public string Icon { get; set; }
@@ -437,19 +437,19 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Icon { get; set; }
 
         [JsonProperty("value")]
-        public double? Value { get; set; }
+        public double Value { get; set; }
 
         [JsonProperty("display")]
         public string Display { get; set; }
 
         [JsonProperty("percent")]
-        public bool? Percent { get; set; }
+        public bool Percent { get; set; }
 
         [JsonProperty("count")]
-        public int? Count { get; set; }
+        public int Count { get; set; }
 
         [JsonProperty("step")]
-        public int? Step { get; set; }
+        public int Step { get; set; }
     }
 
 

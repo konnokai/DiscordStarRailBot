@@ -4,6 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<Configurations>Debug;Release;Debug_API</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -35,7 +36,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="Data\HelpDescription.txt">
+	  <None Update="..\Data\HelpDescription.txt">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </None>
 	</ItemGroup>
