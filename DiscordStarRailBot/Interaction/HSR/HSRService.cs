@@ -63,6 +63,13 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
             if (arg.Data.CustomId.StartsWith("player_data"))
             {
+                string canUseCommandserId = arg.Data.CustomId.Split(':')[2];
+                if (canUseCommandserId != arg.User.Id.ToString())
+                {
+                    await arg.SendErrorAsync("你不可使用本選項");
+                    return;
+                }
+
                 string userId = arg.Data.CustomId.Split(':')[1];
                 var (isSuccess, data) = await GetUserDataAsync(userId);
                 if (!isSuccess || data == null)
@@ -85,12 +92,19 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                             $"**成就數量**: {data.Player.SpaceInfo.AchievementCount}")
                         .WithFooter("玩家資料會快取半小時，可能會有資料上的落差", "https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/sign/SettingsAccount.png").Build();
                     act.Components = new ComponentBuilder()
-                        .WithButton("玩家資料", $"player_data:{data.Player.Uid}", disabled: true)
-                        .WithButton("角色資料", $"player_char_data:{data.Player.Uid}").Build();
+                        .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
+                        .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}").Build();
                 });
             }
             else if (arg.Data.CustomId.StartsWith("player_char_data"))
             {
+                string canUseCommandserId = arg.Data.CustomId.Split(':')[2];
+                if (canUseCommandserId != arg.User.Id.ToString())
+                {
+                    await arg.SendErrorAsync("你不可使用本選項");
+                    return;
+                }
+
                 string userId = arg.Data.CustomId.Split(':')[1];
                 var (isSuccess, data) = await GetUserDataAsync(userId);
                 if (!isSuccess || data == null)
@@ -111,9 +125,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 {
                     act.Embed = GetCharacterDataEmbed(data.Characters[0]);
                     act.Components = new ComponentBuilder()
-                        .WithButton("玩家資料", $"player_data:{data.Player.Uid}")
-                        .WithButton("角色資料", $"player_char_data:{data.Player.Uid}", disabled: true)
-                        .WithSelectMenu($"player_char_data_select:{data.Player.Uid}", selectMenuOptionBuilders)
+                        .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}")
+                        .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
+                        .WithSelectMenu($"player_char_data_select:{data.Player.Uid}:{arg.User.Id}", selectMenuOptionBuilders)
                         .Build();
                 });
             }
@@ -128,6 +142,13 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
                 if (!arg.Data.CustomId.StartsWith("player_char_data_select"))
                     return;
+
+                string canUseCommandserId = arg.Data.CustomId.Split(':')[2];
+                if (canUseCommandserId != arg.User.Id.ToString())
+                {
+                    await arg.SendErrorAsync("你不可使用本選項");
+                    return;
+                }
 
                 string userId = arg.Data.CustomId.Split(':')[1];
                 var (isSuccess, data) = await GetUserDataAsync(userId);
@@ -150,9 +171,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 {
                     act.Embed = GetCharacterDataEmbed(data.Characters[selectIndex]);
                     act.Components = new ComponentBuilder()
-                        .WithButton("玩家資料", $"player_data:{data.Player.Uid}")
-                        .WithButton("角色資料", $"player_char_data:{data.Player.Uid}", disabled: true)
-                        .WithSelectMenu($"player_char_data_select:{data.Player.Uid}", selectMenuOptionBuilders)
+                        .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}")
+                        .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
+                        .WithSelectMenu($"player_char_data_select:{data.Player.Uid}:{arg.User.Id}", selectMenuOptionBuilders)
                         .Build();
                 });
             }

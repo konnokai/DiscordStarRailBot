@@ -97,8 +97,8 @@ namespace DiscordStarRailBot.Interaction.HSR
                         $"**成就數量**: {data.Player.SpaceInfo.AchievementCount}")
                     .WithFooter("玩家資料會快取半小時，可能會有資料上的落差", "https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/sign/SettingsAccount.png").Build(),
                 components: new ComponentBuilder()
-                    .WithButton("玩家資料", $"player_data:{data.Player.Uid}", disabled: true)
-                    .WithButton("角色資料", $"player_char_data:{data.Player.Uid}").Build());
+                    .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{Context.User.Id}", disabled: true)
+                    .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{Context.User.Id}").Build());
         }
     }
 }
