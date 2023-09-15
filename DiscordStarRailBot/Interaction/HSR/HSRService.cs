@@ -66,7 +66,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 string canUseCommandserId = arg.Data.CustomId.Split(':')[2];
                 if (canUseCommandserId != arg.User.Id.ToString())
                 {
-                    await arg.SendErrorAsync("你不可使用本選項");
+                    await arg.SendErrorAsync("你不可使用本選項", true);
                     return;
                 }
 
@@ -101,7 +101,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 string canUseCommandserId = arg.Data.CustomId.Split(':')[2];
                 if (canUseCommandserId != arg.User.Id.ToString())
                 {
-                    await arg.SendErrorAsync("你不可使用本選項");
+                    await arg.SendErrorAsync("你不可使用本選項", true);
                     return;
                 }
 
@@ -143,10 +143,12 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 if (!arg.Data.CustomId.StartsWith("player_char_data_select"))
                     return;
 
+                await arg.DeferAsync();
+
                 string canUseCommandserId = arg.Data.CustomId.Split(':')[2];
                 if (canUseCommandserId != arg.User.Id.ToString())
                 {
-                    await arg.SendErrorAsync("你不可使用本選項");
+                    await arg.SendErrorAsync("你不可使用本選項", true);
                     return;
                 }
 
