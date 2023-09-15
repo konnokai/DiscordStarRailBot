@@ -68,7 +68,14 @@ namespace DiscordStarRailBot.Interaction.HSR
                 using var db = DBContext.GetDbContext();
                 var playerIdLink = db.PlayerIds.FirstOrDefault((x) => x.UserId == Context.User.Id);
                 if (playerIdLink != null)
+                {
                     userId = playerIdLink.PlayerId;
+                }
+                else
+                {
+                    await Context.Interaction.SendErrorAsync("未輸入 UID 且未綁定 UID，請輸入要取得的 UID 或是執行綁定指令");
+                    return;
+                }
             }
 
             var (isSuccess, data) = await _service.GetUserDataAsync(userId);
