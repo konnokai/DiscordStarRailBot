@@ -257,7 +257,7 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Signature { get; set; }
 
         [JsonProperty("is_display")]
-        public bool? IsDisplay { get; set; }
+        public bool IsDisplay { get; set; }
 
         [JsonProperty("space_info")]
         public SpaceInfo SpaceInfo { get; set; }

@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
+using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
 using System.Text;
 
@@ -12,37 +14,55 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
         private readonly DiscordSocketClient _client;
         private readonly HttpClient _httpClient;
-        private readonly Timer _refreshAffixScoreTimer;
+        private readonly Timer _refreshDataTimer;
 
         public HSRService(DiscordSocketClient client, HttpClient httpClient)
         {
             _client = client;
             _httpClient = httpClient;
 
-            _refreshAffixScoreTimer = new Timer(async (obj) =>
+            _refreshDataTimer = new Timer(async (obj) =>
             {
                 try
                 {
                     affixScoreJson = JObject.Parse(await _httpClient.GetStringAsync(AFFIX_SCORE_URL));
                     Log.Info("詞條評分資料已更新");
 
-#if DEBUG_API
-                    var (isSuccess, data) = await GetUserDataAsync("800307542");
-                    if (!isSuccess || data == null)
+                    try
                     {
-                        Log.Error($"獲取資料失敗");
-                        return;
-                    }
+                        if (!Directory.Exists(Program.GetDataFilePath("SRRes")))
+                        {
+                            Repository.Clone("https://github.com/Mar-7th/StarRailRes.git", Program.GetDataFilePath("SRRes"));
+                            Log.Info("Git clome from https://github.com/Mar-7th/StarRailRes.git to SRRes");
+                        }
+                        else
+                        {
+                            using (var repo = new Repository(Program.GetDataFilePath("SRRes")))
+                            {
+                                // Credential information to fetch
+                                PullOptions options = new PullOptions();
+                                options.FetchOptions = new FetchOptions();
 
-                    var d = GetCharacterEmbed(data.Characters[0]);
-                    if (d == null)
+                                // User information to create a merge commit
+                                var signature = new Signature(
+                                    new Identity("Local", "local@local.host"), DateTimeOffset.Now);
+
+                                // Pull
+                                var result =Commands.Pull(repo, signature, options);
+                                Log.Info("Git pull from https://github.com/Mar-7th/StarRailRes.git to SRRes");
+                                if (result.Status == MergeStatus.UpToDate)
+                                    Log.Info($"No need to pull");
+                                else
+                                    Log.Info($"Commit message: {result.Commit.Message}");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
                     {
-                        Log.Error($"獲取資料失敗");
-                        return;
+                        Log.Error(ex, "Git");
+                        if (Directory.Exists(Program.GetDataFilePath("SRRes")))
+                            Directory.Delete(Program.GetDataFilePath("SRRes"), true);
                     }
-
-                    Log.Info(d!.Fields.First().Name);
-#endif
                 }
                 catch (Exception ex)
                 {
