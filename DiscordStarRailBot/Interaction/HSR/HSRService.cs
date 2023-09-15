@@ -1,5 +1,4 @@
 ﻿using LibGit2Sharp;
-using LibGit2Sharp.Handlers;
 using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
 using System.Diagnostics;
@@ -34,14 +33,14 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         if (!Directory.Exists(Program.GetDataFilePath("SRRes")))
                         {
                             Stopwatch sw = Stopwatch.StartNew();
-                            Log.Info("Git clone from https://github.com/Mar-7th/StarRailRes.git to SRRes");
+                            Log.Info("開始從 https://github.com/Mar-7th/StarRailRes.git 複製儲存庫至 SRRes");
                             Repository.Clone("https://github.com/Mar-7th/StarRailRes.git", Program.GetDataFilePath("SRRes"));
                             sw.Stop();
-                            Log.Info($"Git clone done in {sw.Elapsed:hh:mm:ss}");
+                            Log.Info($"複製完成，執行了 {sw.Elapsed:hh\\:mm\\:ss}");
                         }
                         else
                         {
-                            Log.Info("Git pull from https://github.com/Mar-7th/StarRailRes.git to SRRes");
+                            Log.Info("開始從 https://github.com/Mar-7th/StarRailRes.git 拉取儲存庫至 SRRes");
 
                             // Credential information to fetch
                             PullOptions options = new()
@@ -57,9 +56,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                             using var repo = new Repository(Program.GetDataFilePath("SRRes"));
                             var result = Commands.Pull(repo, signature, options);
                             if (result.Status == MergeStatus.UpToDate)
-                                Log.Info($"No need to pull");
+                                Log.Info($"沒有需要拉取的");
                             else
-                                Log.Info($"New commit message: {result.Commit.Message}");
+                                Log.Info($"拉取完成，新 Commit 訊息: {result.Commit.Message}");
                         }
                     }
                     catch (Exception ex)
@@ -71,7 +70,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 }
                 catch (Exception ex)
                 {
-                    Log.Error(ex, "RefreshAffixScore");
+                    Log.Error(ex, "RefreshData");
                 }
             }, null, TimeSpan.FromSeconds(1), TimeSpan.FromHours(6));
 
