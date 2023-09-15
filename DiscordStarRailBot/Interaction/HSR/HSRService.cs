@@ -2,6 +2,7 @@
 using LibGit2Sharp.Handlers;
 using Newtonsoft.Json.Linq;
 using StackExchange.Redis;
+using System.Diagnostics;
 using System.Text;
 
 namespace DiscordStarRailBot.Interaction.HSR.Service
@@ -32,29 +33,33 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     {
                         if (!Directory.Exists(Program.GetDataFilePath("SRRes")))
                         {
+                            Stopwatch sw = Stopwatch.StartNew();
+                            Log.Info("Git clone from https://github.com/Mar-7th/StarRailRes.git to SRRes");
                             Repository.Clone("https://github.com/Mar-7th/StarRailRes.git", Program.GetDataFilePath("SRRes"));
-                            Log.Info("Git clome from https://github.com/Mar-7th/StarRailRes.git to SRRes");
+                            sw.Stop();
+                            Log.Info($"Git clone done in {sw.Elapsed:hh:mm:ss}");
                         }
                         else
                         {
-                            using (var repo = new Repository(Program.GetDataFilePath("SRRes")))
+                            Log.Info("Git pull from https://github.com/Mar-7th/StarRailRes.git to SRRes");
+
+                            // Credential information to fetch
+                            PullOptions options = new()
                             {
-                                // Credential information to fetch
-                                PullOptions options = new PullOptions();
-                                options.FetchOptions = new FetchOptions();
+                                FetchOptions = new FetchOptions()
+                            };
 
-                                // User information to create a merge commit
-                                var signature = new Signature(
-                                    new Identity("Local", "local@local.host"), DateTimeOffset.Now);
+                            // User information to create a merge commit
+                            var signature = new Signature(
+                                new Identity("Local", "local@local.host"), DateTimeOffset.Now);
 
-                                // Pull
-                                var result =Commands.Pull(repo, signature, options);
-                                Log.Info("Git pull from https://github.com/Mar-7th/StarRailRes.git to SRRes");
-                                if (result.Status == MergeStatus.UpToDate)
-                                    Log.Info($"No need to pull");
-                                else
-                                    Log.Info($"Commit message: {result.Commit.Message}");
-                            }
+                            // Pull
+                            using var repo = new Repository(Program.GetDataFilePath("SRRes"));
+                            var result = Commands.Pull(repo, signature, options);
+                            if (result.Status == MergeStatus.UpToDate)
+                                Log.Info($"No need to pull");
+                            else
+                                Log.Info($"New commit message: {result.Commit.Message}");
                         }
                     }
                     catch (Exception ex)
