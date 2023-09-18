@@ -25,6 +25,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
         {
             _client = client;
             _httpClient = httpClient;
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", $"DiscordStartRailBot ver {Program.VERSION}.");
 
             _family = _fontCollection.Add(new MemoryStream(Properties.Resources.SDK_SC_Web));
             GameFont = _family.CreateFont(24, FontStyle.Regular);
