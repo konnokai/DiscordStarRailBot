@@ -193,7 +193,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     index++;
                 }
 
-                await arg.UpdateAsync((act) =>
+                await arg.ModifyOriginalResponseAsync((act) =>
                 {
                     act.Embed = GetCharacterDataEmbed(data.Characters[selectIndex]);
                     act.Components = new ComponentBuilder()
@@ -289,7 +289,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 }
 
                 SRInfoJson? userInfo = JsonConvert.DeserializeObject<SRInfoJson>(json);
-                return null;
+                return userInfo;
             }
             catch (Exception ex)
             {
