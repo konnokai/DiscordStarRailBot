@@ -1,5 +1,6 @@
 ﻿using LibGit2Sharp;
 using Newtonsoft.Json.Linq;
+using SixLabors.Fonts;
 using StackExchange.Redis;
 using System.Diagnostics;
 using System.Text;
@@ -8,9 +9,13 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 {
     public class HSRService : IInteractionService
     {
+        public Font GameFont { get; private set; }
+
         private const string AFFIX_SCORE_URL = "https://raw.githubusercontent.com/Mar-7th/StarRailScore/master/score.json";
 
         private JObject? affixScoreJson = null;
+        private FontCollection _fontCollection = new();
+        private FontFamily _family;
 
         private readonly DiscordSocketClient _client;
         private readonly HttpClient _httpClient;
@@ -20,6 +25,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
         {
             _client = client;
             _httpClient = httpClient;
+
+            _family = _fontCollection.Add(new MemoryStream(Properties.Resources.SDK_SC_Web));
+            GameFont = _family.CreateFont(24, FontStyle.Regular);
 
             _refreshDataTimer = new Timer(async (obj) =>
             {
