@@ -34,8 +34,8 @@ namespace DiscordStarRailBot.Interaction.HSR
                     return;
                 }
 
-                var (isSuccess, data) = await _service.GetUserDataAsync(userId);
-                if (!isSuccess || data == null)
+                var data = await _service.GetUserDataAsync(userId);
+                if (data == null)
                 {
                     await Context.Interaction.SendErrorAsync($"綁定UID失敗，請確認UID `{userId}` 是否正確", true);
                     return;
@@ -78,8 +78,8 @@ namespace DiscordStarRailBot.Interaction.HSR
                 }
             }
 
-            var (isSuccess, data) = await _service.GetUserDataAsync(userId);
-            if (!isSuccess || data == null)
+            var data = await _service.GetUserDataAsync(userId);
+            if (data == null)
             {
                 await Context.Interaction.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
                 return;

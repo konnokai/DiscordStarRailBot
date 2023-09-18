@@ -95,8 +95,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 }
 
                 string userId = arg.Data.CustomId.Split(':')[1];
-                var (isSuccess, data) = await GetUserDataAsync(userId);
-                if (!isSuccess || data == null)
+                var data = await GetUserDataAsync(userId);
+                if (data == null)
                 {
                     await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
                     return;
@@ -130,8 +130,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 }
 
                 string userId = arg.Data.CustomId.Split(':')[1];
-                var (isSuccess, data) = await GetUserDataAsync(userId);
-                if (!isSuccess || data == null)
+                var data = await GetUserDataAsync(userId);
+                if (data == null)
                 {
                     await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
                     return;
@@ -177,8 +177,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 }
 
                 string userId = arg.Data.CustomId.Split(':')[1];
-                var (isSuccess, data) = await GetUserDataAsync(userId);
-                if (!isSuccess || data == null)
+                var data = await GetUserDataAsync(userId);
+                if (data == null)
                 {
                     await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
                     return;
@@ -270,7 +270,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             };
         }
 
-        internal async Task<(bool isSuccess, SRInfoJson? data)> GetUserDataAsync(string userId)
+        internal async Task<SRInfoJson?> GetUserDataAsync(string userId)
         {
             if (string.IsNullOrEmpty(userId))
                 throw new NullReferenceException(nameof(userId));
@@ -283,18 +283,18 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 {
                     json = await _httpClient.GetStringAsync($"https://api.mihomo.me/sr_info_parsed/{userId}?lang=cht");
                     if (json == "{\"detail\":\"Invalid uid\"}")
-                        return (false, null);
+                        return null;
 
                     await Program.RedisDb.StringSetAsync(new RedisKey($"hsr:{userId}"), json, TimeSpan.FromMinutes(30));
                 }
 
                 SRInfoJson? userInfo = JsonConvert.DeserializeObject<SRInfoJson>(json);
-                return (true, userInfo);
+                return null;
             }
             catch (Exception ex)
             {
                 Log.Error(ex, "HSR-GetUserData");
-                return (false, null);
+                return null;
             }
         }
     }
