@@ -1,9 +1,12 @@
 ﻿using LibGit2Sharp;
 using Newtonsoft.Json.Linq;
 using SixLabors.Fonts;
+using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
 using StackExchange.Redis;
 using System.Diagnostics;
-using System.Text;
+using Color = SixLabors.ImageSharp.Color;
+using Image = SixLabors.ImageSharp.Image;
 
 namespace DiscordStarRailBot.Interaction.HSR.Service
 {
@@ -25,10 +28,10 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
         {
             _client = client;
             _httpClient = httpClient;
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", $"DiscordStartRailBot ver {Program.VERSION}.");
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", $"DiscordStartRailBot ver {Program.VERSION.Replace("/", "_").Replace(":", "_")}");
 
             _family = _fontCollection.Add(new MemoryStream(Properties.Resources.SDK_SC_Web));
-            GameFont = _family.CreateFont(24, FontStyle.Regular);
+            GameFont = _family.CreateFont(12, FontStyle.Regular);
 
             _refreshDataTimer = new Timer(async (obj) =>
             {
@@ -154,9 +157,15 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     index++;
                 }
 
+                var result = GetCharacterDataEmbed(data.Characters[0]);
+
                 await arg.ModifyOriginalResponseAsync((act) =>
                 {
-                    act.Embed = GetCharacterDataEmbed(data.Characters[0]);
+                    act.Embed = result.Embed ?? new EmbedBuilder()
+                        .WithErrorColor()
+                        .WithDescription("產生角色資料失敗，可能是尚未更新此角色的資料或是此角色無裝備遺器")
+                        .Build();
+                    act.Attachments = result.Image != null ? new List<FileAttachment>() { new FileAttachment(new MemoryStream(result.Image), "image.jpg") } : null;
                     act.Components = new ComponentBuilder()
                         .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}")
                         .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
@@ -202,12 +211,15 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     index++;
                 }
 
+                var result = GetCharacterDataEmbed(data.Characters[selectIndex]);
+
                 await arg.ModifyOriginalResponseAsync((act) =>
                 {
-                    act.Embed = GetCharacterDataEmbed(data.Characters[selectIndex]) ?? new EmbedBuilder()
+                    act.Embed = result.Embed ?? new EmbedBuilder()
                         .WithErrorColor()
-                        .WithDescription("產生角色資料失敗，可能是尚未更新此角色的資料")
+                        .WithDescription("產生角色資料失敗，可能是尚未更新此角色的資料或是此角色無裝備遺器")
                         .Build();
+                    act.Attachments = result.Image != null ? new List<FileAttachment>() { new FileAttachment(new MemoryStream(result.Image), "image.jpg") } : null;
                     act.Components = new ComponentBuilder()
                         .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}")
                         .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
@@ -221,50 +233,143 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             }
         }
 
-        private Embed? GetCharacterDataEmbed(Character character)
+        private (Embed? Embed, byte[]? Image) GetCharacterDataEmbed(Character character)
         {
             if (affixScoreJson == null)
-                return null;
+                return (null, null);
 
             var charAffixData = affixScoreJson[character.Id];
             if (charAffixData == null)
-                return null;
+                return (null, null);
+
+            if (!character.Relics.Any())
+                return (null, null);
 
             EmbedBuilder eb = new EmbedBuilder()
                 .WithColor(Convert.ToUInt32(character.Element.Color.TrimStart('#'), 16))
                 .WithTitle($"{character.Name} ({character.Level}等 {character.Promotion}階 {character.Rank}命)")
                 .WithDescription($"{character.LightCone.Name} ({character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影)")
                 .WithThumbnailUrl($"https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{character.Preview}")
+                .WithImageUrl("attachment://image.jpg")
                 .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
 
-            int index = 1;
-            foreach (var relic in character.Relics)
+            using var memoryStream = new MemoryStream();
+            using (var image = new Image<Rgba32>(630, 640, new Color(new Rgb24(79, 79, 79))))
             {
-                StringBuilder sb = new();
-
-                decimal mainAffixWeight = decimal.Parse(charAffixData["main"]![index.ToString()]![relic.MainAffix.Type]!.ToString());
-                decimal mainAffixScore = mainAffixWeight == 0 ? 0 : (relic.Level + 1) / 16 * mainAffixWeight;
-
-                sb.AppendLine($"**{relic.MainAffix.Name}** __{relic.MainAffix.Display}__ ({mainAffixScore})");
-
-                decimal totalSubAffixScore = 0;
-                foreach (var subAffix in relic.SubAffix)
+                RichTextOptions textOptions = new(GameFont)
                 {
-                    decimal subAffixWeight = decimal.Parse(charAffixData["weight"]![subAffix.Type]!.ToString());
-                    decimal subAffixScore = subAffixWeight == 0 ? 0 : (decimal)(subAffix.Count + (subAffix.Step * 0.1)) * subAffixWeight;
-                    totalSubAffixScore += subAffixScore;
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    WrappingLength = 120,
+                };
 
-                    sb.AppendLine($"{subAffix.Name} __{subAffix.Display}__ ({subAffixScore})");
+                DrawingOptions drawingOptions = new()
+                {
+                    GraphicsOptions = new GraphicsOptions { BlendPercentage = .8F }
+                };
+
+                int index = 1;
+                foreach (var relic in character.Relics)
+                {
+                    int x = 10 + 310 * ((index - 1) % 2);
+                    int y = 10 + 210 * ((index - 1) / 2);
+
+                    // 遺器背景
+                    image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(28, 28, 28)), new RectangleF(x, y, 300, 200)));
+
+                    // 遺器圖片
+                    using (var relicImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                    {
+                        //image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(181, 181, 181)), new RectangleF(x + 10, y + 25, 96, 96)));
+                        relicImg.Mutate(act => act.Resize(96, 96));
+                        image.Mutate(act => act.DrawImage(relicImg, new Point(x + 10, y + 25), 1f));
+                    }
+
+                    // 星級圖片
+                    using (var rarityImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}icon{Program.GetPlatformSlash()}deco{Program.GetPlatformSlash()}Rarity{relic.Rarity}.png")))
+                    {
+                        rarityImg.Mutate(act => act.Resize(128, 32));
+                        image.Mutate(act => act.DrawImage(rarityImg, new Point(x - 5, y + 116), 1f));
+                    }
+
+                    // 遺器等級
+                    textOptions.Origin = new PointF(x + 5 + 96 / 2, y + 96 + 25 + 25);
+                    textOptions.HorizontalAlignment = HorizontalAlignment.Center;
+                    textOptions.VerticalAlignment = VerticalAlignment.Center;
+                    textOptions.WrappingLength = 80;
+                    image.Mutate(act => act.DrawText(textOptions, $"+{relic.Level}", Color.White));
+
+                    // 主詞條分數計算
+                    decimal mainAffixWeight = decimal.Parse(charAffixData["main"]![relic.Id.Last().ToString()]![relic.MainAffix.Type]!.ToString());
+                    decimal mainAffixScore = mainAffixWeight == 0 ? 0 : (relic.Level + 1) / 16 * mainAffixWeight;
+
+                    // 主詞條圖片及文字繪製
+                    using (var mainAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.MainAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                    {
+                        int affixX = x + 20 + 96, affixY = y + 10;
+                        mainAffixImg.Mutate(act => act.Resize(32, 32));
+                        image.Mutate(act => act.DrawImage(mainAffixImg, new Point(affixX, affixY), 1f));
+
+                        // 詞條名稱
+                        textOptions.Origin = new PointF(affixX + 32, affixY + 16);
+                        textOptions.HorizontalAlignment = HorizontalAlignment.Left;
+                        image.Mutate(act => act.DrawText(textOptions, relic.MainAffix.Name, Color.Goldenrod));
+
+                        // 詞條數值及評分
+                        textOptions.Origin = new PointF(affixX + 174, affixY + 7);
+                        textOptions.HorizontalAlignment = HorizontalAlignment.Right;
+                        image.Mutate(act => act.DrawText(textOptions, $"{relic.MainAffix.Display} ({mainAffixScore})", Color.Goldenrod));
+                    }
+
+                    decimal totalSubAffixScore = 0;
+                    for (int i = 0; i < relic.SubAffix.Count; i++)
+                    {
+                        var subAffix = relic.SubAffix[i];
+                        decimal subAffixWeight = decimal.Parse(charAffixData["weight"]![subAffix.Type]!.ToString());
+                        decimal subAffixScore = subAffixWeight == 0 ? 0 : (decimal)(subAffix.Count + (subAffix.Step * 0.1)) * subAffixWeight;
+                        totalSubAffixScore += subAffixScore;
+
+                        // 主詞條圖片及文字繪製
+                        using (var subAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{subAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                        {
+                            int affixX = x + 20 + 96, affixY = y + 10 + 37 * (i + 1);
+                            subAffixImg.Mutate(act => act.Resize(32, 32));
+                            image.Mutate(act => act.DrawImage(subAffixImg, new Point(affixX, affixY), 1f));
+
+                            // 詞條名稱
+                            textOptions.Origin = new PointF(affixX + 32, affixY + 16);
+                            textOptions.HorizontalAlignment = HorizontalAlignment.Left;
+                            image.Mutate(act => act.DrawText(textOptions, subAffix.Name, Color.White));
+
+                            // 詞條數值及評分
+                            textOptions.Origin = new PointF(affixX + 174, affixY + 7);
+                            textOptions.HorizontalAlignment = HorizontalAlignment.Right;
+                            image.Mutate(act => act.DrawText(textOptions, $"{subAffix.Display} ({subAffixScore})", Color.White));
+                        }
+                    }
+
+                    totalSubAffixScore /= decimal.Parse(charAffixData["max"]!.ToString());
+                    decimal totalScore = Math.Round((mainAffixScore / 2 + totalSubAffixScore / 2) * 100);
+
+                    // 繪製總分及評價
+                    textOptions.Origin = new PointF(x + 5 + 96 / 2, y + 96 + 25 + 25 + 20);
+                    textOptions.HorizontalAlignment = HorizontalAlignment.Center;
+                    image.Mutate(act => act.DrawText(textOptions, $"{totalScore}% - {GetRank(totalScore)}", GetRankColor(totalScore)));
+
+                    index++;
                 }
-                totalSubAffixScore /= decimal.Parse(charAffixData["max"]!.ToString());
 
-                decimal totalScore = Math.Round((mainAffixScore / 2 + totalSubAffixScore / 2) * 100);
+                // 裁切
+                int row = character.Relics.Count / 2 + character.Relics.Count % 1;
+                if (row < 3)
+                {
+                    image.Mutate(act => act.Crop(630, 20 + 200 * row + 10 * (row - 1)));
+                }
 
-                eb.AddField($"{relic.Name} +{relic.Level} ({totalScore}% - {GetRank(totalScore)})", sb.ToString());
-                index++;
+                image.Save(memoryStream, new JpegEncoder());
             }
 
-            return eb.Build();
+            return (eb.Build(), memoryStream.ToArray());
         }
 
         private string GetRank(decimal rank)
@@ -279,6 +384,21 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 < 60 and >= 50 => "B",
                 < 50 and >= 40 => "C",
                 _ => "D",
+            };
+        }
+
+        private Color GetRankColor(decimal rank)
+        {
+            return rank switch
+            {
+                90 => new Rgba32(255, 0, 63),
+                < 90 and >= 85 => new Rgba32(255, 115, 0),
+                < 85 and >= 80 => new Rgba32(255, 185, 15),
+                < 80 and >= 70 => new Rgba32(255, 255, 0),
+                < 70 and >= 60 => new Rgba32(72, 118, 255),
+                < 60 and >= 50 => new Rgba32(0, 0, 139),
+                < 50 and >= 40 => new Rgba32(139, 35, 35),
+                _ => new Rgba32(190, 190, 190),
             };
         }
 
