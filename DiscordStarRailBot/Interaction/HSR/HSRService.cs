@@ -195,7 +195,10 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
                 await arg.ModifyOriginalResponseAsync((act) =>
                 {
-                    act.Embed = GetCharacterDataEmbed(data.Characters[selectIndex]);
+                    act.Embed = GetCharacterDataEmbed(data.Characters[selectIndex]) ?? new EmbedBuilder()
+                        .WithErrorColor()
+                        .WithDescription("產生角色資料失敗，可能是尚未更新此角色的資料")
+                        .Build();
                     act.Components = new ComponentBuilder()
                         .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}")
                         .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
@@ -223,7 +226,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 .WithTitle($"{character.Name} ({character.Level}等 {character.Promotion}階 {character.Rank}命)")
                 .WithDescription($"{character.LightCone.Name} ({character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影)")
                 .WithThumbnailUrl($"https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{character.Preview}")
-                .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore 採用 SRS-N 評分");
+                .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
 
             int index = 1;
             foreach (var relic in character.Relics)
