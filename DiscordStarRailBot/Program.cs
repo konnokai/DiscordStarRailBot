@@ -133,7 +133,7 @@ namespace DiscordStarRailBot
             await iService.GetService<InteractionHandler>().InitializeAsync();
             #endregion
 
-#if DEBUG_API
+#if DEBUG_CHAR_DATA || DEBUG_API
             do { await Task.Delay(200); }
             while (!isDisconnect);
 

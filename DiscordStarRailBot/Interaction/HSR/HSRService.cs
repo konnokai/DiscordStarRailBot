@@ -40,6 +40,12 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     affixScoreJson = JObject.Parse(await _httpClient.GetStringAsync(AFFIX_SCORE_URL));
                     Log.Info("詞條評分資料已更新");
 
+#if DEBUG_CHAR_DATA
+                    var data = await GetUserDataAsync("800307542");
+                    GetCharacterData(data!.Characters[0]);
+                    return;
+#endif
+
                     try
                     {
                         if (!Directory.Exists(Program.GetDataFilePath("SRRes")))
@@ -157,7 +163,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     index++;
                 }
 
-                var result = GetCharacterDataEmbed(data.Characters[0]);
+                var result = GetCharacterData(data.Characters[0]);
 
                 await arg.ModifyOriginalResponseAsync((act) =>
                 {
@@ -211,7 +217,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     index++;
                 }
 
-                var result = GetCharacterDataEmbed(data.Characters[selectIndex]);
+                var result = GetCharacterData(data.Characters[selectIndex]);
 
                 await arg.ModifyOriginalResponseAsync((act) =>
                 {
@@ -233,7 +239,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             }
         }
 
-        private (Embed? Embed, byte[]? Image) GetCharacterDataEmbed(Character character)
+        private (Embed? Embed, byte[]? Image) GetCharacterData(Character character)
         {
             if (affixScoreJson == null)
                 return (null, null);
@@ -366,6 +372,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     image.Mutate(act => act.Crop(630, 20 + 200 * row + 10 * (row - 1)));
                 }
 
+#if DEBUG_CHAR_DATA
+                image.SaveAsBmp(Program.GetDataFilePath("Test.bmp"));
+#endif
                 image.Save(memoryStream, new JpegEncoder());
             }
 

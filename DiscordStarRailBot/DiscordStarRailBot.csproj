@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<Configurations>Debug;Release;Debug_API</Configurations>
+		<Configurations>Debug;Release;Debug_API;Debug_Char_Data</Configurations>
 	</PropertyGroup>
 
 	<ItemGroup>
