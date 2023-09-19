@@ -376,7 +376,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
         {
             return rank switch
             {
-                90 => "ACE",
+                >= 90 => "ACE",
                 < 90 and >= 85 => "SSS",
                 < 85 and >= 80 => "SS",
                 < 80 and >= 70 => "S",
@@ -391,7 +391,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
         {
             return rank switch
             {
-                90 => new Rgba32(255, 0, 63),
+                >= 90 => new Rgba32(255, 0, 63),
                 < 90 and >= 85 => new Rgba32(255, 115, 0),
                 < 85 and >= 80 => new Rgba32(255, 185, 15),
                 < 80 and >= 70 => new Rgba32(255, 255, 0),
