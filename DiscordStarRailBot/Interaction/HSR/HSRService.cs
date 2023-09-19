@@ -286,7 +286,6 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     // 遺器圖片
                     using (var relicImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.Icon.Replace("/", Program.GetPlatformSlash())}")))
                     {
-                        //image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(181, 181, 181)), new RectangleF(x + 10, y + 25, 96, 96)));
                         relicImg.Mutate(act => act.Resize(96, 96));
                         image.Mutate(act => act.DrawImage(relicImg, new Point(x + 10, y + 25), 1f));
                     }
@@ -307,7 +306,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
                     // 主詞條分數計算
                     decimal mainAffixWeight = decimal.Parse(charAffixData["main"]![relic.Id.Last().ToString()]![relic.MainAffix.Type]!.ToString());
-                    decimal mainAffixScore = mainAffixWeight == 0 ? 0 : (relic.Level + 1) / 16 * mainAffixWeight;
+                    decimal mainAffixScore = mainAffixWeight == 0 ? 0 : Math.Round((relic.Level + 1) / 16m * mainAffixWeight, 2);
 
                     // 主詞條圖片及文字繪製
                     using (var mainAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.MainAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
