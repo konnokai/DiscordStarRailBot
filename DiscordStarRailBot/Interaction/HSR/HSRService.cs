@@ -159,7 +159,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 int index = 0;
                 foreach (var item in data.Characters)
                 {
-                    selectMenuOptionBuilders.Add(new SelectMenuOptionBuilder(item.Name, index.ToString(), isDefault: index == 0));
+                    selectMenuOptionBuilders.Add(new SelectMenuOptionBuilder(item.Name == data.Player.Nickname ? "開拓者" : item.Name, index.ToString(), isDefault: index == 0));
                     index++;
                 }
 
