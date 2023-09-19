@@ -282,6 +282,9 @@ namespace DiscordStarRailBot
         public static string GetDataFilePath(string fileName)
             => $"{AppDomain.CurrentDomain.BaseDirectory}Data{GetPlatformSlash()}{fileName}";
 
+        public static string GetResFilePath(string fileName)
+            => $"{AppDomain.CurrentDomain.BaseDirectory}Data{GetPlatformSlash()}SRRes{GetPlatformSlash()}{fileName.Replace("/", GetPlatformSlash())}";
+
         public static string GetPlatformSlash()
             => RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "\\" : "/";
 

@@ -47,11 +47,11 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
                     try
                     {
-                        if (!Directory.Exists(Program.GetDataFilePath("SRRes")))
+                        if (!Directory.Exists(Program.GetResFilePath("")))
                         {
                             Stopwatch sw = Stopwatch.StartNew();
                             Log.Info("開始從 https://github.com/Mar-7th/StarRailRes.git 複製儲存庫至 SRRes");
-                            Repository.Clone("https://github.com/Mar-7th/StarRailRes.git", Program.GetDataFilePath("SRRes"));
+                            Repository.Clone("https://github.com/Mar-7th/StarRailRes.git", Program.GetResFilePath(""));
                             sw.Stop();
                             Log.Info($"複製完成，執行了 {sw.Elapsed:hh\\:mm\\:ss}");
                         }
@@ -70,7 +70,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                                 new Identity("Local", "local@local.host"), DateTimeOffset.Now);
 
                             // Pull
-                            using var repo = new Repository(Program.GetDataFilePath("SRRes"));
+                            using var repo = new Repository(Program.GetResFilePath(""));
                             var result = Commands.Pull(repo, signature, options);
                             if (result.Status == MergeStatus.UpToDate)
                                 Log.Info($"沒有需要拉取的");
@@ -81,8 +81,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     catch (Exception ex)
                     {
                         Log.Error(ex, "Git");
-                        if (Directory.Exists(Program.GetDataFilePath("SRRes")))
-                            Directory.Delete(Program.GetDataFilePath("SRRes"), true);
+                        if (Directory.Exists(Program.GetResFilePath("")))
+                            Directory.Delete(Program.GetResFilePath(""), true);
                     }
                 }
                 catch (Exception ex)
@@ -294,14 +294,14 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(28, 28, 28)), new RectangleF(x, y, 300, 200)));
 
                         // 遺器圖片
-                        using (var relicImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                        using (var relicImg = Image.Load(Program.GetResFilePath(relic.Icon)))
                         {
                             relicImg.Mutate(act => act.Resize(96, 96));
                             image.Mutate(act => act.DrawImage(relicImg, new Point(x + 10, y + 25), 1f));
                         }
 
                         // 星級圖片
-                        using (var rarityImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}icon{Program.GetPlatformSlash()}deco{Program.GetPlatformSlash()}Rarity{relic.Rarity}.png")))
+                        using (var rarityImg = Image.Load(Program.GetResFilePath($"icon/deco/Rarity{relic.Rarity}.png")))
                         {
                             rarityImg.Mutate(act => act.Resize(128, 32));
                             image.Mutate(act => act.DrawImage(rarityImg, new Point(x - 5, y + 116), 1f));
@@ -319,7 +319,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         decimal mainAffixScore = mainAffixWeight == 0 ? 0 : Math.Round((relic.Level + 1) / 16m * mainAffixWeight, 2);
 
                         // 主詞條圖片及文字繪製
-                        using (var mainAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.MainAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                        using (var mainAffixImg = Image.Load(Program.GetResFilePath(relic.MainAffix.Icon)))
                         {
                             int affixX = x + 20 + 96, affixY = y + 10;
                             mainAffixImg.Mutate(act => act.Resize(32, 32));
@@ -345,7 +345,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                             totalSubAffixScore += subAffixScore;
 
                             // 主詞條圖片及文字繪製
-                            using (var subAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{subAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                            using (var subAffixImg = Image.Load(Program.GetResFilePath(subAffix.Icon)))
                             {
                                 int affixX = x + 20 + 96, affixY = y + 10 + 37 * (i + 1);
                                 subAffixImg.Mutate(act => act.Resize(32, 32));
