@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Linq;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp.Drawing.Processing;
-using SixLabors.ImageSharp.Formats.Jpeg;
 using StackExchange.Redis;
 using System.Diagnostics;
 using Color = SixLabors.ImageSharp.Color;
@@ -42,7 +41,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
 #if DEBUG_CHAR_DATA
                     var data = await GetUserDataAsync("800307542");
-                    GetCharacterData(data!.Characters[0]);
+                    await GetCharacterEmbedAndImageAsync(data!.Characters[0]);
                     return;
 #endif
 
@@ -164,7 +163,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     index++;
                 }
 
-                var result = GetCharacterData(data.Characters[0]);
+                var result = await GetCharacterEmbedAndImageAsync(data.Characters[0]);
 
                 await arg.ModifyOriginalResponseAsync((act) =>
                 {
@@ -218,7 +217,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     index++;
                 }
 
-                var result = GetCharacterData(data.Characters[selectIndex]);
+                var result = await GetCharacterEmbedAndImageAsync(data.Characters[selectIndex]);
 
                 await arg.ModifyOriginalResponseAsync((act) =>
                 {
@@ -240,7 +239,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             }
         }
 
-        private (Embed? Embed, byte[]? Image) GetCharacterData(Character character)
+        private async Task<(Embed? Embed, byte[]? Image)> GetCharacterEmbedAndImageAsync(Character character)
         {
             if (affixScoreJson == null)
                 return (null, null);
@@ -260,8 +259,16 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 .WithImageUrl("attachment://image.jpg")
                 .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
 
+            var relicImage = await DrawRelicImageAsync(character, charAffixData);
+
+            return (eb.Build(), relicImage.ToArray());
+        }
+
+        private async Task<byte[]> DrawRelicImageAsync(Character character, JToken charAffixData)
+        {
             using var memoryStream = new MemoryStream();
-            using (var image = new Image<Rgba32>(630, 640, new Color(new Rgb24(79, 79, 79))))
+
+            await Task.Run(async () =>
             {
                 RichTextOptions textOptions = new(GameFont)
                 {
@@ -275,110 +282,113 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     GraphicsOptions = new GraphicsOptions { BlendPercentage = .8F }
                 };
 
-                int index = 1;
-                foreach (var relic in character.Relics)
+                using (var image = new Image<Rgba32>(630, 640, new Color(new Rgb24(79, 79, 79))))
                 {
-                    int x = 10 + 310 * ((index - 1) % 2);
-                    int y = 10 + 210 * ((index - 1) / 2);
-
-                    // 遺器背景
-                    image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(28, 28, 28)), new RectangleF(x, y, 300, 200)));
-
-                    // 遺器圖片
-                    using (var relicImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                    int index = 1;
+                    foreach (var relic in character.Relics)
                     {
-                        relicImg.Mutate(act => act.Resize(96, 96));
-                        image.Mutate(act => act.DrawImage(relicImg, new Point(x + 10, y + 25), 1f));
-                    }
+                        int x = 10 + 310 * ((index - 1) % 2);
+                        int y = 10 + 210 * ((index - 1) / 2);
 
-                    // 星級圖片
-                    using (var rarityImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}icon{Program.GetPlatformSlash()}deco{Program.GetPlatformSlash()}Rarity{relic.Rarity}.png")))
-                    {
-                        rarityImg.Mutate(act => act.Resize(128, 32));
-                        image.Mutate(act => act.DrawImage(rarityImg, new Point(x - 5, y + 116), 1f));
-                    }
+                        // 遺器背景
+                        image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(28, 28, 28)), new RectangleF(x, y, 300, 200)));
 
-                    // 遺器等級
-                    textOptions.Origin = new PointF(x + 5 + 96 / 2, y + 96 + 25 + 25);
-                    textOptions.HorizontalAlignment = HorizontalAlignment.Center;
-                    textOptions.VerticalAlignment = VerticalAlignment.Center;
-                    textOptions.WrappingLength = 80;
-                    image.Mutate(act => act.DrawText(textOptions, $"+{relic.Level}", Color.White));
+                        // 遺器圖片
+                        using (var relicImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                        {
+                            relicImg.Mutate(act => act.Resize(96, 96));
+                            image.Mutate(act => act.DrawImage(relicImg, new Point(x + 10, y + 25), 1f));
+                        }
 
-                    // 主詞條分數計算
-                    decimal mainAffixWeight = decimal.Parse(charAffixData["main"]![relic.Id.Last().ToString()]![relic.MainAffix.Type]!.ToString());
-                    decimal mainAffixScore = mainAffixWeight == 0 ? 0 : Math.Round((relic.Level + 1) / 16m * mainAffixWeight, 2);
+                        // 星級圖片
+                        using (var rarityImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}icon{Program.GetPlatformSlash()}deco{Program.GetPlatformSlash()}Rarity{relic.Rarity}.png")))
+                        {
+                            rarityImg.Mutate(act => act.Resize(128, 32));
+                            image.Mutate(act => act.DrawImage(rarityImg, new Point(x - 5, y + 116), 1f));
+                        }
 
-                    // 主詞條圖片及文字繪製
-                    using (var mainAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.MainAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
-                    {
-                        int affixX = x + 20 + 96, affixY = y + 10;
-                        mainAffixImg.Mutate(act => act.Resize(32, 32));
-                        image.Mutate(act => act.DrawImage(mainAffixImg, new Point(affixX, affixY), 1f));
+                        // 遺器等級
+                        textOptions.Origin = new PointF(x + 5 + 96 / 2, y + 96 + 25 + 25);
+                        textOptions.HorizontalAlignment = HorizontalAlignment.Center;
+                        textOptions.VerticalAlignment = VerticalAlignment.Center;
+                        textOptions.WrappingLength = 80;
+                        image.Mutate(act => act.DrawText(textOptions, $"+{relic.Level}", Color.White));
 
-                        // 詞條名稱
-                        textOptions.Origin = new PointF(affixX + 32, affixY + 16);
-                        textOptions.HorizontalAlignment = HorizontalAlignment.Left;
-                        image.Mutate(act => act.DrawText(textOptions, relic.MainAffix.Name, Color.Goldenrod));
-
-                        // 詞條數值及評分
-                        textOptions.Origin = new PointF(affixX + 174, affixY + 7);
-                        textOptions.HorizontalAlignment = HorizontalAlignment.Right;
-                        image.Mutate(act => act.DrawText(textOptions, $"{relic.MainAffix.Display} ({mainAffixScore})", Color.Goldenrod));
-                    }
-
-                    decimal totalSubAffixScore = 0;
-                    for (int i = 0; i < relic.SubAffix.Count; i++)
-                    {
-                        var subAffix = relic.SubAffix[i];
-                        decimal subAffixWeight = decimal.Parse(charAffixData["weight"]![subAffix.Type]!.ToString());
-                        decimal subAffixScore = subAffixWeight == 0 ? 0 : (decimal)(subAffix.Count + (subAffix.Step * 0.1)) * subAffixWeight;
-                        totalSubAffixScore += subAffixScore;
+                        // 主詞條分數計算
+                        decimal mainAffixWeight = decimal.Parse(charAffixData["main"]![relic.Id.Last().ToString()]![relic.MainAffix.Type]!.ToString());
+                        decimal mainAffixScore = mainAffixWeight == 0 ? 0 : Math.Round((relic.Level + 1) / 16m * mainAffixWeight, 2);
 
                         // 主詞條圖片及文字繪製
-                        using (var subAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{subAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                        using (var mainAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{relic.MainAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
                         {
-                            int affixX = x + 20 + 96, affixY = y + 10 + 37 * (i + 1);
-                            subAffixImg.Mutate(act => act.Resize(32, 32));
-                            image.Mutate(act => act.DrawImage(subAffixImg, new Point(affixX, affixY), 1f));
+                            int affixX = x + 20 + 96, affixY = y + 10;
+                            mainAffixImg.Mutate(act => act.Resize(32, 32));
+                            image.Mutate(act => act.DrawImage(mainAffixImg, new Point(affixX, affixY), 1f));
 
                             // 詞條名稱
                             textOptions.Origin = new PointF(affixX + 32, affixY + 16);
                             textOptions.HorizontalAlignment = HorizontalAlignment.Left;
-                            image.Mutate(act => act.DrawText(textOptions, subAffix.Name, Color.White));
+                            image.Mutate(act => act.DrawText(textOptions, relic.MainAffix.Name, Color.Goldenrod));
 
                             // 詞條數值及評分
                             textOptions.Origin = new PointF(affixX + 174, affixY + 7);
                             textOptions.HorizontalAlignment = HorizontalAlignment.Right;
-                            image.Mutate(act => act.DrawText(textOptions, $"{subAffix.Display} ({subAffixScore})", Color.White));
+                            image.Mutate(act => act.DrawText(textOptions, $"{relic.MainAffix.Display} ({mainAffixScore})", Color.Goldenrod));
                         }
+
+                        decimal totalSubAffixScore = 0;
+                        for (int i = 0; i < relic.SubAffix.Count; i++)
+                        {
+                            var subAffix = relic.SubAffix[i];
+                            decimal subAffixWeight = decimal.Parse(charAffixData["weight"]![subAffix.Type]!.ToString());
+                            decimal subAffixScore = subAffixWeight == 0 ? 0 : (decimal)(subAffix.Count + (subAffix.Step * 0.1)) * subAffixWeight;
+                            totalSubAffixScore += subAffixScore;
+
+                            // 主詞條圖片及文字繪製
+                            using (var subAffixImg = Image.Load(Program.GetDataFilePath($"SRRes{Program.GetPlatformSlash()}{subAffix.Icon.Replace("/", Program.GetPlatformSlash())}")))
+                            {
+                                int affixX = x + 20 + 96, affixY = y + 10 + 37 * (i + 1);
+                                subAffixImg.Mutate(act => act.Resize(32, 32));
+                                image.Mutate(act => act.DrawImage(subAffixImg, new Point(affixX, affixY), 1f));
+
+                                // 詞條名稱
+                                textOptions.Origin = new PointF(affixX + 32, affixY + 16);
+                                textOptions.HorizontalAlignment = HorizontalAlignment.Left;
+                                image.Mutate(act => act.DrawText(textOptions, subAffix.Name, Color.White));
+
+                                // 詞條數值及評分
+                                textOptions.Origin = new PointF(affixX + 174, affixY + 7);
+                                textOptions.HorizontalAlignment = HorizontalAlignment.Right;
+                                image.Mutate(act => act.DrawText(textOptions, $"{subAffix.Display} ({subAffixScore})", Color.White));
+                            }
+                        }
+
+                        totalSubAffixScore /= decimal.Parse(charAffixData["max"]!.ToString());
+                        decimal totalScore = Math.Round((mainAffixScore / 2 + totalSubAffixScore / 2) * 100);
+
+                        // 繪製總分及評價
+                        textOptions.Origin = new PointF(x + 5 + 96 / 2, y + 96 + 25 + 25 + 20);
+                        textOptions.HorizontalAlignment = HorizontalAlignment.Center;
+                        image.Mutate(act => act.DrawText(textOptions, $"{totalScore}% - {GetRank(totalScore)}", GetRankColor(totalScore)));
+
+                        index++;
                     }
 
-                    totalSubAffixScore /= decimal.Parse(charAffixData["max"]!.ToString());
-                    decimal totalScore = Math.Round((mainAffixScore / 2 + totalSubAffixScore / 2) * 100);
-
-                    // 繪製總分及評價
-                    textOptions.Origin = new PointF(x + 5 + 96 / 2, y + 96 + 25 + 25 + 20);
-                    textOptions.HorizontalAlignment = HorizontalAlignment.Center;
-                    image.Mutate(act => act.DrawText(textOptions, $"{totalScore}% - {GetRank(totalScore)}", GetRankColor(totalScore)));
-
-                    index++;
-                }
-
-                // 裁切
-                int row = character.Relics.Count / 2 + character.Relics.Count % 1;
-                if (row < 3)
-                {
-                    image.Mutate(act => act.Crop(630, 20 + 200 * row + 10 * (row - 1)));
-                }
+                    // 裁切
+                    int row = character.Relics.Count / 2 + character.Relics.Count % 1;
+                    if (row < 3)
+                    {
+                        image.Mutate(act => act.Crop(630, 20 + 200 * row + 10 * (row - 1)));
+                    }
 
 #if DEBUG_CHAR_DATA
-                image.SaveAsBmp(Program.GetDataFilePath("Test.bmp"));
+                    await image.SaveAsBmpAsync(Program.GetDataFilePath("Test.bmp"));
 #endif
-                image.Save(memoryStream, new JpegEncoder());
-            }
+                    await image.SaveAsJpegAsync(memoryStream);
+                }
+            });
 
-            return (eb.Build(), memoryStream.ToArray());
+            return memoryStream.ToArray();
         }
 
         private string GetRank(decimal rank)
