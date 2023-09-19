@@ -159,7 +159,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 int index = 0;
                 foreach (var item in data.Characters)
                 {
-                    selectMenuOptionBuilders.Add(new SelectMenuOptionBuilder(item.Name == data.Player.Nickname ? "開拓者" : item.Name, index.ToString(), isDefault: index == 0));
+                    selectMenuOptionBuilders.Add(new SelectMenuOptionBuilder(item.Id.StartsWith("80") ? "開拓者" : item.Name, index.ToString(), isDefault: index == 0));
                     index++;
                 }
 
@@ -213,7 +213,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 int index = 0;
                 foreach (var item in data.Characters)
                 {
-                    selectMenuOptionBuilders.Add(new SelectMenuOptionBuilder(item.Name, index.ToString(), isDefault: index == selectIndex));
+                    selectMenuOptionBuilders.Add(new SelectMenuOptionBuilder(item.Id.StartsWith("80") ? "開拓者" : item.Name, index.ToString(), isDefault: index == selectIndex));
                     index++;
                 }
 
@@ -253,7 +253,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
             EmbedBuilder eb = new EmbedBuilder()
                 .WithColor(Convert.ToUInt32(character.Element.Color.TrimStart('#'), 16))
-                .WithTitle($"{character.Name} ({character.Level}等 {character.Promotion}階 {character.Rank}命)")
+                .WithTitle((character.Id.StartsWith("80") ? "開拓者" : character.Name) + $" ({character.Level}等 {character.Promotion}階 {character.Rank}命)")
                 .WithDescription($"{character.LightCone.Name} ({character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影)")
                 .WithThumbnailUrl($"https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{character.Preview}")
                 .WithImageUrl("attachment://image.jpg")
