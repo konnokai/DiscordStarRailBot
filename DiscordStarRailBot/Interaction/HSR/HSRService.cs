@@ -136,6 +136,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     act.Components = new ComponentBuilder()
                         .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
                         .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}").Build();
+                    act.Attachments = null;
                 });
             }
             else if (arg.Data.CustomId.StartsWith("player_char_data"))
