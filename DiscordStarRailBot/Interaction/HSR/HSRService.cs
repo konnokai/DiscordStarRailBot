@@ -126,7 +126,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         .WithOkColor()
                         .WithTitle(data.Player.Nickname)
                         .WithThumbnailUrl($"https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{data.Player.Avatar.Icon}")
-                        .WithDescription($"「{data.Player.Signature}」\n\n" +
+                        .WithDescription($"「" + (string.IsNullOrEmpty(data.Player.Signature) ? "這個人很懶，甚麼都沒留下" : data.Player.Signature) + "」\n\n" +
                             $"**均衡等級**: {data.Player.WorldLevel}\n" +
                             $"**開拓等級**: {data.Player.Level}\n" +
                             $"**角色數量**: {data.Player.SpaceInfo.AvatarCount}\n" +
