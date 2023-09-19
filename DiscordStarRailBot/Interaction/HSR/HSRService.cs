@@ -396,8 +396,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 < 85 and >= 80 => new Rgba32(255, 185, 15),
                 < 80 and >= 70 => new Rgba32(255, 255, 0),
                 < 70 and >= 60 => new Rgba32(72, 118, 255),
-                < 60 and >= 50 => new Rgba32(0, 0, 139),
-                < 50 and >= 40 => new Rgba32(139, 35, 35),
+                < 60 and >= 50 => new Rgba32(135, 206, 235),
+                < 50 and >= 40 => new Rgba32(255, 128, 153),
                 _ => new Rgba32(190, 190, 190),
             };
         }
