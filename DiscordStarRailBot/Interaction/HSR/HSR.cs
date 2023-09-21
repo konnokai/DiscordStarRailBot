@@ -73,7 +73,7 @@ namespace DiscordStarRailBot.Interaction.HSR
                 }
                 else
                 {
-                    await Context.Interaction.SendErrorAsync("未輸入 UID 且未綁定 UID，請輸入要取得的 UID 或是執行綁定指令");
+                    await Context.Interaction.SendErrorAsync("未輸入 UID 且未綁定 UID，請輸入要取得的 UID 或是執行綁定指令", true);
                     return;
                 }
             }
