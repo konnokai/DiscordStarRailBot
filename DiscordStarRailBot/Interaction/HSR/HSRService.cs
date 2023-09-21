@@ -244,17 +244,16 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             if (affixScoreJson == null)
                 return (null, null);
 
-            var charAffixData = affixScoreJson[character.Id];
-            if (charAffixData == null)
-                return (null, null);
-
             if (!character.Relics.Any())
                 return (null, null);
+
+            var charAffixData = affixScoreJson[character.Id];
 
             EmbedBuilder eb = new EmbedBuilder()
                 .WithColor(Convert.ToUInt32(character.Element.Color.TrimStart('#'), 16))
                 .WithTitle((character.Id.StartsWith("80") ? "開拓者" : character.Name) + $" ({character.Level}等 {character.Promotion}階 {character.Rank}命)")
-                .WithDescription($"{character.LightCone.Name} ({character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影)")
+                .WithDescription($"{character.LightCone.Name} ({character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影)" +
+                    (charAffixData == null ? "\n注意: 該角色尚無遺器評分資料" : ""))
                 .WithThumbnailUrl($"https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{character.Preview}")
                 .WithImageUrl("attachment://image.jpg")
                 .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
@@ -264,7 +263,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             return (eb.Build(), relicImage.ToArray());
         }
 
-        private async Task<byte[]> DrawRelicImageAsync(Character character, JToken charAffixData)
+        private async Task<byte[]> DrawRelicImageAsync(Character character, JToken? charAffixData)
         {
             using var memoryStream = new MemoryStream();
 
@@ -314,9 +313,13 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         textOptions.WrappingLength = 80;
                         image.Mutate(act => act.DrawText(textOptions, $"+{relic.Level}", Color.White));
 
-                        // 主詞條分數計算
-                        decimal mainAffixWeight = decimal.Parse(charAffixData["main"]![relic.Id.Last().ToString()]![relic.MainAffix.Type]!.ToString());
-                        decimal mainAffixScore = mainAffixWeight == 0 ? 0 : Math.Round((relic.Level + 1) / 16m * mainAffixWeight, 2);
+                        decimal mainAffixScore = 0;
+                        if (charAffixData != null)
+                        {
+                            // 主詞條分數計算
+                            decimal mainAffixWeight = decimal.Parse(charAffixData["main"]![relic.Id.Last().ToString()]![relic.MainAffix.Type]!.ToString());
+                            mainAffixScore = mainAffixWeight == 0 ? 0 : Math.Round((relic.Level + 1) / 16m * mainAffixWeight, 2);
+                        }
 
                         // 主詞條圖片及文字繪製
                         using (var mainAffixImg = Image.Load(Program.GetResFilePath(relic.MainAffix.Icon)))
@@ -333,16 +336,20 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                             // 詞條數值及評分
                             textOptions.Origin = new PointF(affixX + 174, affixY + 7);
                             textOptions.HorizontalAlignment = HorizontalAlignment.Right;
-                            image.Mutate(act => act.DrawText(textOptions, $"{relic.MainAffix.Display} ({mainAffixScore})", Color.Goldenrod));
+                            image.Mutate(act => act.DrawText(textOptions, $"{relic.MainAffix.Display}" + (mainAffixScore != 0 ? $" ({mainAffixScore})" : ""), Color.Goldenrod));
                         }
 
                         decimal totalSubAffixScore = 0;
                         for (int i = 0; i < relic.SubAffix.Count; i++)
                         {
                             var subAffix = relic.SubAffix[i];
-                            decimal subAffixWeight = decimal.Parse(charAffixData["weight"]![subAffix.Type]!.ToString());
-                            decimal subAffixScore = subAffixWeight == 0 ? 0 : (decimal)(subAffix.Count + (subAffix.Step * 0.1)) * subAffixWeight;
-                            totalSubAffixScore += subAffixScore;
+                            decimal subAffixScore = 0;
+                            if (charAffixData != null)
+                            {
+                                decimal subAffixWeight = decimal.Parse(charAffixData["weight"]![subAffix.Type]!.ToString());
+                                subAffixScore = subAffixWeight == 0 ? 0 : (decimal)(subAffix.Count + (subAffix.Step * 0.1)) * subAffixWeight;
+                                totalSubAffixScore += subAffixScore;
+                            }
 
                             // 主詞條圖片及文字繪製
                             using (var subAffixImg = Image.Load(Program.GetResFilePath(subAffix.Icon)))
@@ -359,17 +366,21 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                                 // 詞條數值及評分
                                 textOptions.Origin = new PointF(affixX + 174, affixY + 7);
                                 textOptions.HorizontalAlignment = HorizontalAlignment.Right;
-                                image.Mutate(act => act.DrawText(textOptions, $"{subAffix.Display} ({subAffixScore})", Color.White));
+                                image.Mutate(act => act.DrawText(textOptions, $"{subAffix.Display}" + (totalSubAffixScore != 0 ? $" ({subAffixScore})" : ""), Color.White));
                             }
                         }
 
-                        totalSubAffixScore /= decimal.Parse(charAffixData["max"]!.ToString());
-                        decimal totalScore = Math.Round((mainAffixScore / 2 + totalSubAffixScore / 2) * 100);
+                        decimal totalScore = 0;
+                        if (charAffixData != null)
+                        {
+                            totalSubAffixScore /= decimal.Parse(charAffixData["max"]!.ToString());
+                            totalScore = Math.Round((mainAffixScore / 2 + totalSubAffixScore / 2) * 100);
+                        }
 
                         // 繪製總分及評價
                         textOptions.Origin = new PointF(x + 5 + 96 / 2, y + 96 + 25 + 25 + 20);
                         textOptions.HorizontalAlignment = HorizontalAlignment.Center;
-                        image.Mutate(act => act.DrawText(textOptions, $"{totalScore}% - {GetRank(totalScore)}", GetRankColor(totalScore)));
+                        image.Mutate(act => act.DrawText(textOptions, totalScore != 0 ? $"{totalScore}% - {GetRank(totalScore)}" : "", GetRankColor(totalScore)));
 
                         index++;
                     }
