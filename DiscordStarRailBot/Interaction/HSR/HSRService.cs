@@ -115,7 +115,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 var data = await GetUserDataAsync(userId);
                 if (data == null)
                 {
-                    await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
+                    await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確\n" +
+                        $"若正確則可能是因 API 問題導致無法查詢資料，請等待一段時間後重試", true);
                     return;
                 }
 
@@ -151,7 +152,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 var data = await GetUserDataAsync(userId);
                 if (data == null)
                 {
-                    await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
+                    await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確\n" +
+                        $"若正確則可能是因 API 問題導致無法查詢資料，請等待一段時間後重試", true);
                     return;
                 }
 
@@ -204,7 +206,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 var data = await GetUserDataAsync(userId);
                 if (data == null)
                 {
-                    await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
+                    await arg.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確\n" +
+                        $"若正確則可能是因 API 問題導致無法查詢資料，請等待一段時間後重試", true);
                     return;
                 }
 

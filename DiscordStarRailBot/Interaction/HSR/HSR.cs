@@ -37,7 +37,8 @@ namespace DiscordStarRailBot.Interaction.HSR
                 var data = await _service.GetUserDataAsync(userId);
                 if (data == null)
                 {
-                    await Context.Interaction.SendErrorAsync($"綁定UID失敗，請確認UID `{userId}` 是否正確", true);
+                    await Context.Interaction.SendErrorAsync($"綁定UID失敗，請確認UID `{userId}` 是否正確\n" +
+                        $"若正確則可能是因 API 問題導致無法查詢資料，請等待一段時間後重試", true);
                     return;
                 }
 
@@ -81,7 +82,8 @@ namespace DiscordStarRailBot.Interaction.HSR
             var data = await _service.GetUserDataAsync(userId);
             if (data == null)
             {
-                await Context.Interaction.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確", true);
+                await Context.Interaction.SendErrorAsync($"獲取資料失敗，請確認UID `{userId}` 是否正確\n" +
+                        $"若正確則可能是因 API 問題導致無法查詢資料，請等待一段時間後重試", true);
                 return;
             }
 
