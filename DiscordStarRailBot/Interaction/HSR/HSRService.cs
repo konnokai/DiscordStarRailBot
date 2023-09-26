@@ -104,8 +104,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
             if (arg.Data.CustomId.StartsWith("player_data"))
             {
-                string canUseCommandserId = arg.Data.CustomId.Split(':')[2];
-                if (canUseCommandserId != arg.User.Id.ToString())
+                string canUseCommandUserId = arg.Data.CustomId.Split(':')[2];
+                if (canUseCommandUserId != arg.User.Id.ToString())
                 {
                     await arg.SendErrorAsync("你不可使用本選項", true);
                     return;
@@ -141,8 +141,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             }
             else if (arg.Data.CustomId.StartsWith("player_char_data"))
             {
-                string canUseCommandserId = arg.Data.CustomId.Split(':')[2];
-                if (canUseCommandserId != arg.User.Id.ToString())
+                string canUseCommandUserId = arg.Data.CustomId.Split(':')[2];
+                if (canUseCommandUserId != arg.User.Id.ToString())
                 {
                     await arg.SendErrorAsync("你不可使用本選項", true);
                     return;
@@ -369,7 +369,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                                 // 詞條數值及評分
                                 textOptions.Origin = new PointF(affixX + 174, affixY + 7);
                                 textOptions.HorizontalAlignment = HorizontalAlignment.Right;
-                                image.Mutate(act => act.DrawText(textOptions, $"{subAffix.Display}" + (totalSubAffixScore != 0 ? $" ({subAffixScore})" : ""), Color.White));
+                                image.Mutate(act => act.DrawText(textOptions, $"{subAffix.Display}" + (subAffixScore != 0 ? $" ({subAffixScore})" : ""), Color.White));
                             }
                         }
 
