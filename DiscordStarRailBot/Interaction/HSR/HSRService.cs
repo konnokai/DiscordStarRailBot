@@ -211,6 +211,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     return;
                 }
 
+                await arg.SendConfirmAsync("繪製圖片中...", true, true);
+
                 var selectIndex = int.Parse(arg.Data.Values.First());
                 List<SelectMenuOptionBuilder> selectMenuOptionBuilders = new();
                 int index = 0;
