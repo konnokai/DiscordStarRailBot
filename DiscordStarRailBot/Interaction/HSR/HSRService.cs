@@ -333,10 +333,24 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         attributes.Add(item.Field, new() { item });
                 }
 
-                using (var image = new Image<Rgba32>(380, 490, new Color(new Rgb24(79, 79, 79))))
+                // 只取最多12個能力值來繪製
+                attributes = new Dictionary<string, List<Attribute>>(attributes.Take(12));
+
+                // 總共要繪製的高度
+                int totalHeight = 10 + 40 * attributes.Count;
+
+                using (var image = new Image<Rgba32>(380, totalHeight, new Color(new Rgb24(79, 79, 79))))
                 {
+                    // 繪製角色圖
+                    using (var charImage = Image.Load(Program.GetResFilePath(character.Preview)))
+                {
+                        decimal scale = (decimal)totalHeight / charImage.Height;
+                        charImage.Mutate(act => act.Resize((int)Math.Floor(charImage.Width * scale), totalHeight));
+                        image.Mutate(act => act.DrawImage(charImage, new Point(image.Width / 2 - charImage.Width / 2), 1f));
+                    }
+
                     int index = 1;
-                    foreach (var item in attributes.Take(12))
+                    foreach (var item in attributes)
                     {
                         int x = 10;
                         int y = 10 + 40 * (index - 1);
@@ -365,7 +379,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     }
 
                     // 裁切
-                    image.Mutate(act => act.Crop(380, 10 + 40 * attributes.Count));                    
+                    image.Mutate(act => act.Crop(380, totalHeight));
 
 #if DEBUG_CHAR_DATA
                     await image.SaveAsBmpAsync(Program.GetDataFilePath("statusImage.bmp"));
