@@ -22,6 +22,10 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
         private readonly DiscordSocketClient _client;
         private readonly HttpClient _httpClient;
         private readonly Timer _refreshDataTimer;
+        private DrawingOptions _drawingOptions = new()
+        {
+            GraphicsOptions = new GraphicsOptions { BlendPercentage = .8F }
+        };
 
         public HSRService(DiscordSocketClient client, HttpClient httpClient)
         {
@@ -42,6 +46,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 #if DEBUG_CHAR_DATA
                     var data = await GetUserDataAsync("800307542");
                     await GetCharacterEmbedAndImageAsync(data!.Characters[0]);
+                    Log.Info("繪製完成");
                     return;
 #endif
 
@@ -263,10 +268,94 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 .WithImageUrl("attachment://image.jpg")
                 .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
 
+            var statisticImage = await DrawCharStatisticImageAsync(character);
             var relicImage = await DrawRelicImageAsync(character, charAffixData);
 
             return (eb.Build(), relicImage.ToArray());
         }
+
+        private async Task<byte[]> DrawCharStatisticImageAsync(Character character)
+        {
+            using var memoryStream = new MemoryStream();
+
+            await Task.Run(async () =>
+            {
+                RichTextOptions textOptions = new(_family.CreateFont(24, FontStyle.Regular))
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    WrappingLength = 200,
+                };
+
+                RichTextOptions textOptions2 = new(GameFont)
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    WrappingLength = 200,
+                };
+
+                // 按順序增加能力值資料
+                var attributes = new Dictionary<string, List<Attribute>>();
+                foreach (var item in character.Attributes)
+                {
+                    attributes.Add(item.Field, new() { item });
+                }
+
+                // 整理能力值加總
+                foreach (var item in character.Additions)
+                {
+                    if (attributes.ContainsKey(item.Field))
+                        attributes[item.Field].Add(item);
+                    else
+                        attributes.Add(item.Field, new() { item });
+                }
+
+                using (var image = new Image<Rgba32>(380, 490, new Color(new Rgb24(79, 79, 79))))
+                {
+                    int index = 1;
+                    foreach (var item in attributes.Take(12))
+                    {
+                        int x = 10;
+                        int y = 10 + 40 * (index - 1);
+
+                        // 能力值背景 (偵錯用)
+                        //image.Mutate(act => act.Fill(Color.Gray, new RectangleF(x, y, 360, 30)));
+
+                        // 能力值名稱
+                        textOptions.Origin = new PointF(x, y + 16);
+                        textOptions.HorizontalAlignment = HorizontalAlignment.Left;
+                        image.Mutate((act) => act.DrawText(textOptions, item.Value.First().Name, Color.White));
+
+                        // 能力值加總數值
+                        if (item.Value.Count > 1)
+                        {
+                            textOptions2.Origin = new PointF(x + 300, y + 6);
+                            image.Mutate((act) => act.DrawText(textOptions2, $"+{FormatValue(item.Value.Last().Value, item.Value.Last().Percent)}", Color.LightBlue));
+                        }
+
+                        // 能力值最終數值
+                        textOptions.Origin = new PointF(x + 290, y - 2);
+                        textOptions.HorizontalAlignment = HorizontalAlignment.Right;
+                        image.Mutate((act) => act.DrawText(textOptions, $"{FormatValue(item.Value.Sum((x) => x.Value), item.Value.First().Percent)}", Color.White));
+
+                        index++;
+                    }
+
+                    // 裁切
+                    image.Mutate(act => act.Crop(380, 10 + 40 * attributes.Count));                    
+
+#if DEBUG_CHAR_DATA
+                    await image.SaveAsBmpAsync(Program.GetDataFilePath("statusImage.bmp"));
+#endif
+                    await image.SaveAsJpegAsync(memoryStream);
+                }
+            });
+
+            return memoryStream.ToArray();
+        }
+
+        private string FormatValue(double value, bool isPercent = false)
+            => isPercent ? $"{Math.Floor(value * 1000) / 10d}%" : $"{Math.Floor(value)}";
 
         private async Task<byte[]> DrawRelicImageAsync(Character character, JToken? charAffixData)
         {
@@ -281,11 +370,6 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     WrappingLength = 120,
                 };
 
-                DrawingOptions drawingOptions = new()
-                {
-                    GraphicsOptions = new GraphicsOptions { BlendPercentage = .8F }
-                };
-
                 using (var image = new Image<Rgba32>(630, 640, new Color(new Rgb24(79, 79, 79))))
                 {
                     int index = 1;
@@ -295,7 +379,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         int y = 10 + 210 * ((index - 1) / 2);
 
                         // 遺器背景
-                        image.Mutate((act) => act.Fill(drawingOptions, new Color(new Rgba32(28, 28, 28)), new RectangleF(x, y, 300, 200)));
+                        image.Mutate((act) => act.Fill(_drawingOptions, new Color(new Rgba32(28, 28, 28)), new RectangleF(x, y, 300, 200)));
 
                         // 遺器圖片
                         using (var relicImg = Image.Load(Program.GetResFilePath(relic.Icon)))
@@ -398,7 +482,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     }
 
 #if DEBUG_CHAR_DATA
-                    await image.SaveAsBmpAsync(Program.GetDataFilePath("Test.bmp"));
+                    await image.SaveAsBmpAsync(Program.GetDataFilePath("relicImage.bmp"));
 #endif
                     await image.SaveAsJpegAsync(memoryStream);
                 }
