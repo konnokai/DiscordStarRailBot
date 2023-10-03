@@ -269,7 +269,30 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
 
             var statisticImage = await DrawCharStatisticImageAsync(character);
-            var relicImage = await DrawRelicImageAsync(character, charAffixData);
+            var statisticImageBytes = await DrawCharStatisticImageAsync(character);
+            var relicImageBytes = await DrawRelicImageAsync(character, charAffixData);
+
+            using var memoryStream = new MemoryStream();
+            using (var image = new Image<Rgba32>(1010, 640, new Color(new Rgb24(79, 79, 79))))
+            {
+                using (var statisticImage = Image.Load(statisticImageBytes.AsSpan()))
+                {
+                    image.Mutate(act => act.DrawImage(statisticImage, new Point(0, image.Height - statisticImage.Height), 1f));
+                }
+
+                using (var relicImage = Image.Load(relicImageBytes.AsSpan()))
+                {
+                    image.Mutate(act => act.DrawImage(relicImage, new Point(image.Width - relicImage.Width, 0), 1f));
+                }
+
+#if DEBUG_CHAR_DATA
+                await image.SaveAsBmpAsync(Program.GetDataFilePath("charImage.bmp"));
+#endif
+                await image.SaveAsJpegAsync(memoryStream);
+            }
+
+            return (eb.Build(), memoryStream.ToArray());
+        }
 
             return (eb.Build(), relicImage.ToArray());
         }
