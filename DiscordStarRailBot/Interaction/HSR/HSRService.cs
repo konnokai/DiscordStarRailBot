@@ -275,6 +275,18 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 using (var dataImage = Image.Load(dataImageBytes.AsSpan()))
                 {
                     image.Mutate(act => act.DrawImage(dataImage, new Point(0, 0), 1f));
+
+                    if (File.Exists(Program.GetResFilePath(character.Preview)))
+                    {
+                        // 繪製角色圖
+                        using (var charImage = Image.Load(Program.GetResFilePath(character.Preview)))
+                        {
+                            int totalHeight = image.Height - dataImage.Height - 10;
+                            decimal scale = (decimal)totalHeight / charImage.Height;
+                            charImage.Mutate(act => act.Resize((int)Math.Floor(charImage.Width * scale), totalHeight));
+                            image.Mutate(act => act.DrawImage(charImage, new Point(dataImage.Width / 2 - charImage.Width / 2, dataImage.Height), 0.6f));
+                        }
+                    }
                 }
 
                 using (var statisticImage = Image.Load(statisticImageBytes.AsSpan()))
@@ -406,17 +418,6 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
                 using (var image = new Image<Rgba32>(380, totalHeight, Color.Transparent))
                 {
-                    if (File.Exists(Program.GetResFilePath(character.Preview)))
-                        {
-                        // 繪製角色圖
-                        using (var charImage = Image.Load(Program.GetResFilePath(character.Preview)))
-                        {
-                            decimal scale = (decimal)totalHeight / charImage.Height;
-                            charImage.Mutate(act => act.Resize((int)Math.Floor(charImage.Width * scale), totalHeight));
-                            image.Mutate(act => act.DrawImage(charImage, new Point(image.Width / 2 - charImage.Width / 2), 0.6f));
-                        }
-                    }
-
                     int index = 1;
                     foreach (var item in attributes)
                     {
