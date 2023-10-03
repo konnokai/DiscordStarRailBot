@@ -341,12 +341,15 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
                 using (var image = new Image<Rgba32>(380, totalHeight, new Color(new Rgb24(79, 79, 79))))
                 {
+                    if (File.Exists(Program.GetResFilePath(character.Preview)))
+                    {
                     // 繪製角色圖
                     using (var charImage = Image.Load(Program.GetResFilePath(character.Preview)))
                 {
                         decimal scale = (decimal)totalHeight / charImage.Height;
                         charImage.Mutate(act => act.Resize((int)Math.Floor(charImage.Width * scale), totalHeight));
-                        image.Mutate(act => act.DrawImage(charImage, new Point(image.Width / 2 - charImage.Width / 2), 1f));
+                            image.Mutate(act => act.DrawImage(charImage, new Point(image.Width / 2 - charImage.Width / 2), 0.6f));
+                        }
                     }
 
                     int index = 1;
