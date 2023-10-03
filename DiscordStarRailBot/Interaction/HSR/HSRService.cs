@@ -261,10 +261,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
 
             EmbedBuilder eb = new EmbedBuilder()
                 .WithColor(Convert.ToUInt32(character.Element.Color.TrimStart('#'), 16))
-                .WithTitle((character.Id.StartsWith("80") ? "開拓者" : character.Name) + $" ({character.Level}等 {character.Promotion}階 {character.Rank}命)")
-                .WithDescription($"{character.LightCone.Name} ({character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影)" +
-                    (charAffixData == null ? "\n注意: 該角色尚無遺器評分資料" : ""))
-                .WithThumbnailUrl($"https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/{character.Preview}")
+                .WithDescription(charAffixData == null ? "\n注意: 該角色尚無遺器評分資料" : "")
                 .WithImageUrl("attachment://image.jpg")
                 .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
 
