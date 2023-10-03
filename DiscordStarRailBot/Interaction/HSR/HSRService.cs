@@ -268,13 +268,18 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 .WithImageUrl("attachment://image.jpg")
                 .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
 
-            var statisticImage = await DrawCharStatisticImageAsync(character);
+            var dataImageBytes = await DrawCharDataImageAsync(character);
             var statisticImageBytes = await DrawCharStatisticImageAsync(character);
             var relicImageBytes = await DrawRelicImageAsync(character, charAffixData);
 
             using var memoryStream = new MemoryStream();
             using (var image = new Image<Rgba32>(1010, 640, new Color(new Rgb24(79, 79, 79))))
             {
+                using (var dataImage = Image.Load(dataImageBytes.AsSpan()))
+                {
+                    image.Mutate(act => act.DrawImage(dataImage, new Point(0, 0), 1f));
+                }
+
                 using (var statisticImage = Image.Load(statisticImageBytes.AsSpan()))
                 {
                     image.Mutate(act => act.DrawImage(statisticImage, new Point(0, image.Height - statisticImage.Height), 1f));
@@ -294,7 +299,70 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             return (eb.Build(), memoryStream.ToArray());
         }
 
-            return (eb.Build(), relicImage.ToArray());
+
+        private async Task<byte[]> DrawCharDataImageAsync(Character character)
+        {
+            using var memoryStream = new MemoryStream();
+
+            await Task.Run(async () =>
+            {
+                RichTextOptions nameTextOptions = new(_family.CreateFont(48, FontStyle.Regular))
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    WrappingLength = 380,
+                    Origin = new Point(10, 32)
+                };
+
+                RichTextOptions lightConeTextOptions = new(_family.CreateFont(24, FontStyle.Regular))
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    WrappingLength = 380,
+                    Origin = new Point(10, 101)
+                };
+
+                RichTextOptions textOptions = new(GameFont)
+                {
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    WrappingLength = 380,
+                };
+
+                using (var image = new Image<Rgba32>(380, 150, new Color(new Rgb24(79, 79, 79))))
+                {
+                    // 角色名稱
+                    image.Mutate(act => act.DrawText(nameTextOptions, character.Id.StartsWith("80") ? "開拓者" : character.Name, Color.White));
+
+                    // 角色等級，晉階，星魂
+                    textOptions.Origin = new Point(10, 62);
+                    image.Mutate(act => act.DrawText(textOptions, $"{character.Level}等 {character.Promotion}階 {character.Rank}星魂", Color.White));
+
+                    // 光錐名稱
+                    image.Mutate(act => act.DrawText(lightConeTextOptions, character.LightCone.Name, Color.White));
+
+                    // 光錐等級，晉階，疊影
+                    textOptions.Origin = new Point(10, 121);
+                    image.Mutate(act => act.DrawText(textOptions, $"{character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影", Color.White));
+
+                    if (File.Exists(Program.GetResFilePath(character.LightCone.Preview)))
+                    {
+                        // 光錐圖片
+                        using (var lightConeImage = Image.Load(Program.GetResFilePath(character.LightCone.Preview)))
+                        {
+                            decimal scale = (decimal)(image.Height - 20) / lightConeImage.Height;
+                            lightConeImage.Mutate(act => act.Resize((int)Math.Floor(lightConeImage.Width * scale), image.Height - 20));
+                            image.Mutate(act => act.DrawImage(lightConeImage, new Point(image.Width - lightConeImage.Width - 10, 10), 1f));
+                        }
+                    }
+#if DEBUG_CHAR_DATA
+                    await image.SaveAsBmpAsync(Program.GetDataFilePath("dataImage.bmp"));
+#endif
+                    await image.SaveAsJpegAsync(memoryStream);
+                }
+            });
+
+            return memoryStream.ToArray();
         }
 
         private async Task<byte[]> DrawCharStatisticImageAsync(Character character)
@@ -343,11 +411,11 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 {
                     if (File.Exists(Program.GetResFilePath(character.Preview)))
                     {
-                    // 繪製角色圖
-                    using (var charImage = Image.Load(Program.GetResFilePath(character.Preview)))
-                {
-                        decimal scale = (decimal)totalHeight / charImage.Height;
-                        charImage.Mutate(act => act.Resize((int)Math.Floor(charImage.Width * scale), totalHeight));
+                        // 繪製角色圖
+                        using (var charImage = Image.Load(Program.GetResFilePath(character.Preview)))
+                        {
+                            decimal scale = (decimal)totalHeight / charImage.Height;
+                            charImage.Mutate(act => act.Resize((int)Math.Floor(charImage.Width * scale), totalHeight));
                             image.Mutate(act => act.DrawImage(charImage, new Point(image.Width / 2 - charImage.Width / 2), 0.6f));
                         }
                     }
