@@ -235,7 +235,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         .WithErrorColor()
                         .WithDescription("產生角色資料失敗，可能是尚未更新此角色的資料或是此角色無裝備遺器")
                         .Build();
-                    act.Attachments = result.Image != null ? new List<FileAttachment>() { new FileAttachment(new MemoryStream(result.Image), "image.jpg") } : null;
+                    act.Attachments = result.Image != null ? new List<FileAttachment>() { new FileAttachment(new MemoryStream(result.Image), "image.png") } : null;
                     act.Components = new ComponentBuilder()
                         .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}")
                         .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
@@ -262,7 +262,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
             EmbedBuilder eb = new EmbedBuilder()
                 .WithColor(Convert.ToUInt32(character.Element.Color.TrimStart('#'), 16))
                 .WithDescription(charAffixData == null ? "\n注意: 該角色尚無遺器評分資料" : "")
-                .WithImageUrl("attachment://image.jpg")
+                .WithImageUrl("attachment://image.png")
                 .WithFooter("詞條評分參考 https://github.com/Mar-7th/StarRailScore ，採用 SRS-N 評分");
 
             var dataImageBytes = await DrawCharDataImageAsync(character);
@@ -288,9 +288,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 }
 
 #if DEBUG_CHAR_DATA
-                await image.SaveAsBmpAsync(Program.GetDataFilePath("charImage.bmp"));
+                await image.SaveAsPngAsync(Program.GetDataFilePath("charImage.png"));
 #endif
-                await image.SaveAsJpegAsync(memoryStream);
+                await image.SaveAsPngAsync(memoryStream);
             }
 
             return (eb.Build(), memoryStream.ToArray());
@@ -326,7 +326,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     WrappingLength = 380,
                 };
 
-                using (var image = new Image<Rgba32>(380, 150, new Color(new Rgb24(79, 79, 79))))
+                using (var image = new Image<Rgba32>(380, 150, Color.Transparent))
                 {
                     // 角色名稱
                     image.Mutate(act => act.DrawText(nameTextOptions, character.Id.StartsWith("80") ? "開拓者" : character.Name, Color.White));
@@ -353,9 +353,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         }
                     }
 #if DEBUG_CHAR_DATA
-                    await image.SaveAsBmpAsync(Program.GetDataFilePath("dataImage.bmp"));
+                    await image.SaveAsPngAsync(Program.GetDataFilePath("dataImage.png"));
 #endif
-                    await image.SaveAsJpegAsync(memoryStream);
+                    await image.SaveAsPngAsync(memoryStream);
                 }
             });
 
@@ -404,10 +404,10 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 // 總共要繪製的高度
                 int totalHeight = 10 + 40 * attributes.Count;
 
-                using (var image = new Image<Rgba32>(380, totalHeight, new Color(new Rgb24(79, 79, 79))))
+                using (var image = new Image<Rgba32>(380, totalHeight, Color.Transparent))
                 {
                     if (File.Exists(Program.GetResFilePath(character.Preview)))
-                    {
+                        {
                         // 繪製角色圖
                         using (var charImage = Image.Load(Program.GetResFilePath(character.Preview)))
                         {
@@ -450,9 +450,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     image.Mutate(act => act.Crop(380, totalHeight));
 
 #if DEBUG_CHAR_DATA
-                    await image.SaveAsBmpAsync(Program.GetDataFilePath("statusImage.bmp"));
+                    await image.SaveAsPngAsync(Program.GetDataFilePath("statusImage.png"));
 #endif
-                    await image.SaveAsJpegAsync(memoryStream);
+                    await image.SaveAsPngAsync(memoryStream);
                 }
             });
 
@@ -475,7 +475,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     WrappingLength = 120,
                 };
 
-                using (var image = new Image<Rgba32>(630, 640, new Color(new Rgb24(79, 79, 79))))
+                using (var image = new Image<Rgba32>(630, 640, Color.Transparent))
                 {
                     int index = 1;
                     foreach (var relic in character.Relics)
@@ -587,9 +587,9 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     }
 
 #if DEBUG_CHAR_DATA
-                    await image.SaveAsBmpAsync(Program.GetDataFilePath("relicImage.bmp"));
+                    await image.SaveAsPngAsync(Program.GetDataFilePath("relicImage.png"));
 #endif
-                    await image.SaveAsJpegAsync(memoryStream);
+                    await image.SaveAsPngAsync(memoryStream);
                 }
             });
 
