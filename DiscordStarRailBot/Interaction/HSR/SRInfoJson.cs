@@ -26,13 +26,13 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Icon { get; set; }
 
         [JsonProperty("value")]
-        public double? Value { get; set; }
+        public double Value { get; set; }
 
         [JsonProperty("display")]
         public string Display { get; set; }
 
         [JsonProperty("percent")]
-        public bool? Percent { get; set; }
+        public bool Percent { get; set; }
     }
 
     public class Attribute
@@ -47,13 +47,13 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Icon { get; set; }
 
         [JsonProperty("value")]
-        public double? Value { get; set; }
+        public double Value { get; set; }
 
         [JsonProperty("display")]
         public string Display { get; set; }
 
         [JsonProperty("percent")]
-        public bool? Percent { get; set; }
+        public bool Percent { get; set; }
     }
 
     public class Avatar
@@ -71,13 +71,13 @@ namespace DiscordStarRailBot.Interaction.HSR
     public class ChallengeData
     {
         [JsonProperty("maze_group_id")]
-        public int? MazeGroupId { get; set; }
+        public int MazeGroupId { get; set; }
 
         [JsonProperty("maze_group_index")]
-        public int? MazeGroupIndex { get; set; }
+        public int MazeGroupIndex { get; set; }
 
         [JsonProperty("pre_maze_group_index")]
-        public int? PreMazeGroupIndex { get; set; }
+        public int PreMazeGroupIndex { get; set; }
     }
 
     public class Character
@@ -89,16 +89,16 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Name { get; set; }
 
         [JsonProperty("rarity")]
-        public int? Rarity { get; set; }
+        public int Rarity { get; set; }
 
         [JsonProperty("rank")]
-        public int? Rank { get; set; }
+        public int Rank { get; set; }
 
         [JsonProperty("level")]
-        public int? Level { get; set; }
+        public int Level { get; set; }
 
         [JsonProperty("promotion")]
-        public int? Promotion { get; set; }
+        public int Promotion { get; set; }
 
         [JsonProperty("icon")]
         public string Icon { get; set; }
@@ -137,7 +137,7 @@ namespace DiscordStarRailBot.Interaction.HSR
         public List<Attribute> Attributes { get; set; }
 
         [JsonProperty("additions")]
-        public List<Addition> Additions { get; set; }
+        public List<Attribute> Additions { get; set; }
 
         [JsonProperty("properties")]
         public List<Property> Properties { get; set; }
@@ -167,16 +167,16 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Name { get; set; }
 
         [JsonProperty("rarity")]
-        public int? Rarity { get; set; }
+        public int Rarity { get; set; }
 
         [JsonProperty("rank")]
-        public int? Rank { get; set; }
+        public int Rank { get; set; }
 
         [JsonProperty("level")]
-        public int? Level { get; set; }
+        public int Level { get; set; }
 
         [JsonProperty("promotion")]
-        public int? Promotion { get; set; }
+        public int Promotion { get; set; }
 
         [JsonProperty("icon")]
         public string Icon { get; set; }
@@ -212,13 +212,13 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Icon { get; set; }
 
         [JsonProperty("value")]
-        public double? Value { get; set; }
+        public double Value { get; set; }
 
         [JsonProperty("display")]
         public string Display { get; set; }
 
         [JsonProperty("percent")]
-        public bool? Percent { get; set; }
+        public bool Percent { get; set; }
     }
 
     public class Path
@@ -242,13 +242,13 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Nickname { get; set; }
 
         [JsonProperty("level")]
-        public int? Level { get; set; }
+        public int Level { get; set; }
 
         [JsonProperty("world_level")]
-        public int? WorldLevel { get; set; }
+        public int WorldLevel { get; set; }
 
         [JsonProperty("friend_count")]
-        public int? FriendCount { get; set; }
+        public int FriendCount { get; set; }
 
         [JsonProperty("avatar")]
         public Avatar Avatar { get; set; }
@@ -284,13 +284,13 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Display { get; set; }
 
         [JsonProperty("percent")]
-        public bool? Percent { get; set; }
+        public bool Percent { get; set; }
 
         [JsonProperty("count")]
-        public int? Count { get; set; }
+        public int Count { get; set; }
 
         [JsonProperty("step")]
-        public int? Step { get; set; }
+        public int Step { get; set; }
     }
 
     public class Relic
@@ -335,7 +335,7 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Icon { get; set; }
 
         [JsonProperty("num")]
-        public int? Num { get; set; }
+        public int Num { get; set; }
 
         [JsonProperty("desc")]
         public string Desc { get; set; }
@@ -353,10 +353,10 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Name { get; set; }
 
         [JsonProperty("level")]
-        public int? Level { get; set; }
+        public int Level { get; set; }
 
         [JsonProperty("max_level")]
-        public int? MaxLevel { get; set; }
+        public int MaxLevel { get; set; }
 
         [JsonProperty("element")]
         public Element Element { get; set; }
@@ -389,13 +389,13 @@ namespace DiscordStarRailBot.Interaction.HSR
         public string Id { get; set; }
 
         [JsonProperty("level")]
-        public int? Level { get; set; }
+        public int Level { get; set; }
 
         [JsonProperty("anchor")]
         public string Anchor { get; set; }
 
         [JsonProperty("max_level")]
-        public int? MaxLevel { get; set; }
+        public int MaxLevel { get; set; }
 
         [JsonProperty("icon")]
         public string Icon { get; set; }
@@ -410,13 +410,13 @@ namespace DiscordStarRailBot.Interaction.HSR
         public ChallengeData ChallengeData { get; set; }
 
         [JsonProperty("pass_area_progress")]
-        public int? PassAreaProgress { get; set; }
+        public int PassAreaProgress { get; set; }
 
         [JsonProperty("light_cone_count")]
-        public int? LightConeCount { get; set; }
+        public int LightConeCount { get; set; }
 
         [JsonProperty("avatar_count")]
-        public int? AvatarCount { get; set; }
+        public int AvatarCount { get; set; }
 
         [JsonProperty("achievement_count")]
         public int? AchievementCount { get; set; }
