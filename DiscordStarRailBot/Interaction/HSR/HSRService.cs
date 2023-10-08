@@ -178,7 +178,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         .WithErrorColor()
                         .WithDescription("產生角色資料失敗，可能是尚未更新此角色的資料或是此角色無裝備遺器")
                         .Build();
-                    act.Attachments = result.Image != null ? new List<FileAttachment>() { new FileAttachment(new MemoryStream(result.Image), "image.jpg") } : null;
+                    act.Attachments = result.Image != null ? new List<FileAttachment>() { new FileAttachment(new MemoryStream(result.Image), "image.png") } : null;
                     act.Components = new ComponentBuilder()
                         .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{arg.User.Id}")
                         .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{arg.User.Id}", disabled: true)
