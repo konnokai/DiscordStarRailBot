@@ -62,8 +62,6 @@ namespace DiscordStarRailBot.Interaction.HSR
         [SlashCommand("get-user-detail", "取得玩家資料，不輸入參數則使用自己綁定的UID")]
         public async Task GetUserDetail([Summary("使用者", "使用指定使用者綁定的UID，此為優先選項")] IUser? user = null, [Summary("UID", "指定UID")] string userId = "")
         {
-            await DeferAsync(false);
-
             using var db = DBContext.GetDbContext();
             if (user != null)
             {
@@ -71,7 +69,7 @@ namespace DiscordStarRailBot.Interaction.HSR
                 if (playerIdLink != null)
                     userId = playerIdLink.PlayerId;
                 else
-                    await Context.Interaction.SendErrorAsync("該使用者尚未綁定 UID", true);
+                    await Context.Interaction.SendErrorAsync("該使用者尚未綁定 UID", false);
             }
 
             if (string.IsNullOrEmpty(userId))
@@ -83,10 +81,12 @@ namespace DiscordStarRailBot.Interaction.HSR
                 }
                 else
                 {
-                    await Context.Interaction.SendErrorAsync("未輸入 UID 且未綁定 UID，請輸入要取得的 UID 或是執行綁定指令", true);
+                    await Context.Interaction.SendErrorAsync("未輸入 UID 且未綁定 UID，請輸入要取得的 UID 或是執行綁定指令", false);
                     return;
                 }
             }
+
+            await DeferAsync(false);
 
             var data = await _service.GetUserDataAsync(userId);
             if (data == null)
