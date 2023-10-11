@@ -59,14 +59,21 @@ namespace DiscordStarRailBot.Interaction.HSR
             }
         }
 
-        [SlashCommand("get-user-detail", "取得玩家資料")]
-        public async Task GetUserDetail([Summary("UID", "留空則使用自己綁定的UID")] string userId = "")
+        [SlashCommand("get-user-detail", "取得玩家資料，不輸入參數則使用自己綁定的UID")]
+        public async Task GetUserDetail([Summary("使用者", "使用指定使用者綁定的UID，此為優先選項")] IUser? user = null, [Summary("UID", "指定UID")] string userId = "")
         {
             await DeferAsync(false);
 
+            using var db = DBContext.GetDbContext();
+            if (user != null)
+            {
+                var playerIdLink = db.PlayerIds.FirstOrDefault((x) => x.UserId == user.Id);
+                if (playerIdLink != null)                
+                    userId = playerIdLink.PlayerId;                
+            }
+
             if (string.IsNullOrEmpty(userId))
             {
-                using var db = DBContext.GetDbContext();
                 var playerIdLink = db.PlayerIds.FirstOrDefault((x) => x.UserId == Context.User.Id);
                 if (playerIdLink != null)
                 {
