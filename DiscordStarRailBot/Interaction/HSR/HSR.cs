@@ -68,8 +68,10 @@ namespace DiscordStarRailBot.Interaction.HSR
             if (user != null)
             {
                 var playerIdLink = db.PlayerIds.FirstOrDefault((x) => x.UserId == user.Id);
-                if (playerIdLink != null)                
-                    userId = playerIdLink.PlayerId;                
+                if (playerIdLink != null)
+                    userId = playerIdLink.PlayerId;
+                else
+                    await Context.Interaction.SendErrorAsync("該使用者尚未綁定 UID", true);
             }
 
             if (string.IsNullOrEmpty(userId))
