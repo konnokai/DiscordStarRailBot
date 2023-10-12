@@ -47,6 +47,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     var data = await GetUserDataAsync("800307542");
                     await GetCharacterEmbedAndImageAsync(data!.Characters[0]);
                     Log.Info("繪製完成");
+                    Environment.Exit(0);
                     return;
 #endif
 
@@ -319,7 +320,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 {
                     HorizontalAlignment = HorizontalAlignment.Left,
                     VerticalAlignment = VerticalAlignment.Center,
-                    WrappingLength = 380,
+                    WrappingLength = 0,
                     Origin = new Point(10, 32)
                 };
 
@@ -341,7 +342,11 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 using (var image = new Image<Rgba32>(380, 150, Color.Transparent))
                 {
                     // 角色名稱
-                    image.Mutate(act => act.DrawText(nameTextOptions, character.Id.StartsWith("80") ? "開拓者" : character.Name, Color.White));
+                    string charName = character.Id.StartsWith("80") ? "開拓者" : character.Name;
+                    if (charName.Length >= 5)
+                        nameTextOptions.Origin = new Point(10, 12);
+
+                    image.Mutate(act => act.DrawText(nameTextOptions, charName, Color.White));
 
                     // 角色等級，晉階，星魂
                     textOptions.Origin = new Point(10, 62);
