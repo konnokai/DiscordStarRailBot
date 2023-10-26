@@ -520,7 +520,10 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         if (charAffixData != null)
                         {
                             // 主詞條分數計算
-                            decimal mainAffixWeight = decimal.Parse(charAffixData["main"]![relic.Id.Last().ToString()]![relic.MainAffix.Type]!.ToString());
+                            decimal mainAffixWeight = 0;
+                            try { mainAffixWeight = decimal.Parse(charAffixData["main"]![relic.Id.Last().ToString()]![relic.MainAffix.Type]!.ToString()); }
+                            catch (Exception ex) { Log.Error(ex, $"MainAffix {character.Name} ({character.Id}): {relic.Id.Last()} - {relic.MainAffix.Type} 也許是 Null"); }
+
                             mainAffixScore = mainAffixWeight == 0 ? 0 : Math.Round((relic.Level + 1) / 16m * mainAffixWeight, 2);
                         }
 
@@ -549,7 +552,11 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                             decimal subAffixScore = 0;
                             if (charAffixData != null)
                             {
-                                decimal subAffixWeight = decimal.Parse(charAffixData["weight"]![subAffix.Type]!.ToString());
+
+                                decimal subAffixWeight = 0;
+                                try { subAffixWeight = decimal.Parse(charAffixData["weight"]![subAffix.Type]!.ToString()); }
+                                catch (Exception ex) { Log.Error(ex, $"SubAffix {character.Name} ({character.Id}): {relic.Id.Last()} - {subAffix.Type} 也許是 Null"); }
+
                                 subAffixScore = subAffixWeight == 0 ? 0 : (decimal)(subAffix.Count + (subAffix.Step * 0.1)) * subAffixWeight;
                                 totalSubAffixScore += subAffixScore;
                             }
