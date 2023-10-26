@@ -96,6 +96,8 @@ namespace DiscordStarRailBot.Interaction.HSR
                 return;
             }
 
+            bool isNoCharData = data.Characters == null || !data.Characters.Any();
+
             await Context.Interaction.FollowupAsync(embed: new EmbedBuilder()
                     .WithOkColor()
                     .WithTitle(data.Player.Nickname)
@@ -104,12 +106,13 @@ namespace DiscordStarRailBot.Interaction.HSR
                         $"**均衡等級**: {data.Player.WorldLevel}\n" +
                         $"**開拓等級**: {data.Player.Level}\n" +
                         $"**角色數量**: {data.Player.SpaceInfo.AvatarCount}\n" +
-                        $"**光錐數量**: {data.Player.SpaceInfo.LightConeCount}\n" +
-                        $"**成就數量**: {data.Player.SpaceInfo.AchievementCount}")
+                        $"**光錐數量**: {data.Player.SpaceInfo.LightConeCount}\n" + 
+                        $"**成就數量**: {data.Player.SpaceInfo.AchievementCount}" +
+                        (isNoCharData ? "\n\n(注意: 該玩家尚未設定助戰及展示角色，無法顯示角色資料)" : ""))
                     .WithFooter("玩家資料會快取半小時，可能會有資料上的落差", "https://raw.githubusercontent.com/Mar-7th/StarRailRes/master/icon/sign/SettingsAccount.png").Build(),
                 components: new ComponentBuilder()
                     .WithButton("玩家資料", $"player_data:{data.Player.Uid}:{Context.User.Id}", disabled: true)
-                    .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{Context.User.Id}", disabled: !data.Player.IsDisplay).Build());
+                    .WithButton("角色資料", $"player_char_data:{data.Player.Uid}:{Context.User.Id}", disabled: isNoCharData).Build());
         }
     }
 }
