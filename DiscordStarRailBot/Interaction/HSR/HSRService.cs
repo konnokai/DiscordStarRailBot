@@ -346,8 +346,12 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                 {
                     // 角色名稱
                     string charName = character.Id.StartsWith("80") ? "開拓者" : character.Name;
-                    if (charName.Length >= 5)
+                    if (charName.Length >= 5 || charName.Contains('•'))
                         nameTextOptions.Origin = new Point(10, 12);
+
+                    // 托帕要另外處理
+                    if (character.Id == "1112")
+                        nameTextOptions.Origin = new Point(10, -2);
 
                     image.Mutate(act => act.DrawText(nameTextOptions, charName, Color.White));
 
