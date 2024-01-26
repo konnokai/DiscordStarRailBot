@@ -44,8 +44,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     Log.Info("詞條評分資料已更新");
 
 #if DEBUG_CHAR_DATA
-                    var data = await GetUserDataAsync("800307542");
-                    await GetCharacterEmbedAndImageAsync(data!.Characters[0]);
+                    var data = await GetUserDataAsync("804252469");
+                    await GetCharacterEmbedAndImageAsync(data!.Characters[2]);
                     Log.Info("繪製完成");
                     Environment.Exit(0);
                     return;
@@ -585,7 +585,7 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                         }
 
                         decimal totalScore = 0;
-                        if (charAffixData != null)
+                        if (charAffixData != null && decimal.Parse(charAffixData["max"]!.ToString()) != 0)
                         {
                             totalSubAffixScore /= decimal.Parse(charAffixData["max"]!.ToString());
                             totalScore = Math.Round((mainAffixScore / 2 + totalSubAffixScore / 2) * 100);
