@@ -1,7 +1,10 @@
 ﻿using LibGit2Sharp;
 using Newtonsoft.Json.Linq;
 using SixLabors.Fonts;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Drawing.Processing;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 using StackExchange.Redis;
 using System.Diagnostics;
 using Color = SixLabors.ImageSharp.Color;
@@ -44,8 +47,8 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     Log.Info("詞條評分資料已更新");
 
 #if DEBUG_CHAR_DATA
-                    var data = await GetUserDataAsync("804252469");
-                    await GetCharacterEmbedAndImageAsync(data!.Characters[2]);
+                    var data = await GetUserDataAsync("800307542");
+                    await GetCharacterEmbedAndImageAsync(data!.Characters[1]);
                     Log.Info("繪製完成");
                     Environment.Exit(0);
                     return;
