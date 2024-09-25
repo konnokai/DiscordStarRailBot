@@ -362,21 +362,25 @@ namespace DiscordStarRailBot.Interaction.HSR.Service
                     textOptions.Origin = new Point(10, 62);
                     image.Mutate(act => act.DrawText(textOptions, $"{character.Level}等 {character.Promotion}階 {character.Rank}星魂", Color.White));
 
-                    // 光錐名稱
-                    image.Mutate(act => act.DrawText(lightConeTextOptions, character.LightCone.Name, Color.White));
-
-                    // 光錐等級，晉階，疊影
-                    textOptions.Origin = new Point(10, 121);
-                    image.Mutate(act => act.DrawText(textOptions, $"{character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影", Color.White));
-
-                    if (File.Exists(Program.GetResFilePath(character.LightCone.Preview)))
+                    // 有人會裸裝不穿光錐，先判定有沒有穿再來繪製
+                    if (character.LightCone != null)
                     {
-                        // 光錐圖片
-                        using (var lightConeImage = Image.Load(Program.GetResFilePath(character.LightCone.Preview)))
+                        // 光錐名稱
+                        image.Mutate(act => act.DrawText(lightConeTextOptions, character.LightCone.Name, Color.White));
+
+                        // 光錐等級，晉階，疊影
+                        textOptions.Origin = new Point(10, 121);
+                        image.Mutate(act => act.DrawText(textOptions, $"{character.LightCone.Level}等 {character.LightCone.Promotion}階 {character.LightCone.Rank}疊影", Color.White));
+
+                        if (File.Exists(Program.GetResFilePath(character.LightCone.Preview)))
                         {
-                            decimal scale = (decimal)(image.Height - 20) / lightConeImage.Height;
-                            lightConeImage.Mutate(act => act.Resize((int)Math.Floor(lightConeImage.Width * scale), image.Height - 20));
-                            image.Mutate(act => act.DrawImage(lightConeImage, new Point(image.Width - lightConeImage.Width - 10, 10), 1f));
+                            // 光錐圖片
+                            using (var lightConeImage = Image.Load(Program.GetResFilePath(character.LightCone.Preview)))
+                            {
+                                decimal scale = (decimal)(image.Height - 20) / lightConeImage.Height;
+                                lightConeImage.Mutate(act => act.Resize((int)Math.Floor(lightConeImage.Width * scale), image.Height - 20));
+                                image.Mutate(act => act.DrawImage(lightConeImage, new Point(image.Width - lightConeImage.Width - 10, 10), 1f));
+                            }
                         }
                     }
 #if DEBUG_CHAR_DATA
