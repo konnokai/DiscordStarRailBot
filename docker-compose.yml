@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   discord-star-rail-bot:
     container_name: discord-star-rail-bot
